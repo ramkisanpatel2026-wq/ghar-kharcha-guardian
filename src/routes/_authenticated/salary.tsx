@@ -25,12 +25,8 @@ function Salary() {
   const list = useQuery({
     queryKey: ["salary"],
     queryFn: async () =>
-      (
-        await supabase
-          .from("salary_entries")
-          .select("*")
-          .order("month", { ascending: false })
-      ).data ?? [],
+      (await supabase.from("salary_entries").select("*").order("month", { ascending: false }))
+        .data ?? [],
   });
 
   const thisMonth = (list.data ?? [])
@@ -78,9 +74,7 @@ function Salary() {
       <h1 className="text-2xl font-semibold">{t("salary.title")}</h1>
 
       <div className="rounded-2xl border border-border gradient-primary p-5 text-primary-foreground shadow-hero">
-        <p className="text-xs uppercase tracking-wide opacity-80">
-          {t("salary.thisMonthTotal")}
-        </p>
+        <p className="text-xs uppercase tracking-wide opacity-80">{t("salary.thisMonthTotal")}</p>
         <p className="mt-1 text-3xl font-semibold">{fmtINR(thisMonth)}</p>
       </div>
 

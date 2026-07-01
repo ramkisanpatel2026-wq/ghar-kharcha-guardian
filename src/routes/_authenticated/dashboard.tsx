@@ -105,7 +105,11 @@ function Dashboard() {
           value={fmtINR(d?.balance)}
           tone={d && d.balance >= 0 ? "success" : "destructive"}
         />
-        <StatCard label={t("dashboard.savings")} value={fmtINR(Math.max(0, d?.balance ?? 0))} tone="muted" />
+        <StatCard
+          label={t("dashboard.savings")}
+          value={fmtINR(Math.max(0, d?.balance ?? 0))}
+          tone="muted"
+        />
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
@@ -164,23 +168,16 @@ function Dashboard() {
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
                   {t("dashboard.udhariGive")}
                 </p>
-                <p className="mt-1 text-xl font-semibold text-destructive">
-                  {fmtINR(d?.give)}
-                </p>
+                <p className="mt-1 text-xl font-semibold text-destructive">{fmtINR(d?.give)}</p>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
                   {t("dashboard.udhariReceive")}
                 </p>
-                <p className="mt-1 text-xl font-semibold text-success">
-                  {fmtINR(d?.receive)}
-                </p>
+                <p className="mt-1 text-xl font-semibold text-success">{fmtINR(d?.receive)}</p>
               </div>
             </div>
-            <Link
-              to="/udhari"
-              className="mt-4 inline-flex text-xs text-primary hover:underline"
-            >
+            <Link to="/udhari" className="mt-4 inline-flex text-xs text-primary hover:underline">
               {t("nav.udhari")} <ArrowRight className="ml-1 inline" size={12} />
             </Link>
           </div>
@@ -193,9 +190,7 @@ function Dashboard() {
               </Link>
             </div>
             {!d || d.reminders.length === 0 ? (
-              <p className="mt-4 text-sm text-muted-foreground">
-                {t("dashboard.noReminders")}
-              </p>
+              <p className="mt-4 text-sm text-muted-foreground">{t("dashboard.noReminders")}</p>
             ) : (
               <ul className="mt-3 space-y-2 text-sm">
                 {d.reminders.map((r) => {

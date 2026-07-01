@@ -89,11 +89,7 @@ function Reports() {
       y += 7;
       doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
-      doc.text(
-        `${t("reports.balance")}: ${fmtINR(q.data.totalInc - q.data.totalExp)}`,
-        14,
-        y
-      );
+      doc.text(`${t("reports.balance")}: ${fmtINR(q.data.totalInc - q.data.totalExp)}`, 14, y);
       doc.setFont("helvetica", "normal");
       y += 10;
 
@@ -132,11 +128,7 @@ function Reports() {
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(120, 120, 120);
-        doc.text(
-          `${t("reports.generated")} · Page ${i} / ${pageCount}`,
-          14,
-          290
-        );
+        doc.text(`${t("reports.generated")} · Page ${i} / ${pageCount}`, 14, 290);
       }
 
       doc.save(`ghar-kharcha-${month}.pdf`);
@@ -201,7 +193,9 @@ function Reports() {
       </div>
 
       <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
-        <h2 className="mb-3 font-semibold">{t("reports.breakdown")} — {label}</h2>
+        <h2 className="mb-3 font-semibold">
+          {t("reports.breakdown")} — {label}
+        </h2>
         {(q.data?.byCat ?? []).length === 0 ? (
           <p className="text-sm text-muted-foreground">No data for this month.</p>
         ) : (
@@ -219,7 +213,15 @@ function Reports() {
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone: "success" | "warning" | "primary" }) {
+function Stat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "success" | "warning" | "primary";
+}) {
   const cls = { success: "text-success", warning: "text-warning", primary: "text-primary" }[tone];
   return (
     <div className="rounded-2xl border border-border bg-card p-4 shadow-card">

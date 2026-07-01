@@ -26,7 +26,10 @@ function Admin() {
     queryKey: ["admin"],
     queryFn: async () => {
       const [profiles, expenses, udhari] = await Promise.all([
-        supabase.from("profiles").select("user_id, full_name, language, created_at").order("created_at", { ascending: false }),
+        supabase
+          .from("profiles")
+          .select("user_id, full_name, language, created_at")
+          .order("created_at", { ascending: false }),
         supabase.from("expenses").select("amount, user_id"),
         supabase.from("udhari").select("id"),
       ]);
@@ -36,7 +39,7 @@ function Admin() {
       }
       const cutoff = Date.now() - 30 * 24 * 3600 * 1000;
       const newSignups = (profiles.data ?? []).filter(
-        (p) => new Date(p.created_at).getTime() > cutoff
+        (p) => new Date(p.created_at).getTime() > cutoff,
       ).length;
       return {
         users: (profiles.data ?? []).map((p) => ({

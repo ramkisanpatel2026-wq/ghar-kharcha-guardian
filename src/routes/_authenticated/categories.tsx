@@ -22,8 +22,7 @@ function Categories() {
 
   const cats = useQuery({
     queryKey: ["categories"],
-    queryFn: async () =>
-      (await supabase.from("categories").select("*").order("name")).data ?? [],
+    queryFn: async () => (await supabase.from("categories").select("*").order("name")).data ?? [],
   });
 
   const usage = useQuery({
@@ -115,10 +114,7 @@ function Categories() {
           const pct = budget ? Math.min(100, (used / budget) * 100) : 0;
           const over = budget ? used > budget : false;
           return (
-            <li
-              key={c.id}
-              className="rounded-xl border border-border bg-card p-3 shadow-card"
-            >
+            <li key={c.id} className="rounded-xl border border-border bg-card p-3 shadow-card">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">
@@ -145,9 +141,7 @@ function Categories() {
               {budget && (
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary">
                   <div
-                    className={`h-full transition-all ${
-                      over ? "bg-destructive" : "bg-primary"
-                    }`}
+                    className={`h-full transition-all ${over ? "bg-destructive" : "bg-primary"}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
