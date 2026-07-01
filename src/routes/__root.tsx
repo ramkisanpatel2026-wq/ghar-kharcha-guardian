@@ -104,6 +104,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting.",
       },
+      { name: "description", content: "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting." },
+      { property: "og:description", content: "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting." },
+      { name: "twitter:description", content: "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dcd2c7a4-1e7a-482e-ab53-bf669a3b4fb1/id-preview-5253a3e3--04767cc5-c202-4a35-8432-4f9c099d342a.lovable.app-1782889393842.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dcd2c7a4-1e7a-482e-ab53-bf669a3b4fb1/id-preview-5253a3e3--04767cc5-c202-4a35-8432-4f9c099d342a.lovable.app-1782889393842.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
