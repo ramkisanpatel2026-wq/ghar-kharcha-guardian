@@ -77,7 +77,13 @@ export function AppShell({ children }: { children: ReactNode }) {
               {menuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
             <Link to="/dashboard" className="flex items-center gap-2">
-              <img src="/icon-512.png" alt="" className="h-8 w-8 rounded-lg" width={32} height={32} />
+              <img
+                src="/icon-512.png"
+                alt=""
+                className="h-8 w-8 rounded-lg"
+                width={32}
+                height={32}
+              />
               <span className="font-semibold">{t("app.name")}</span>
             </Link>
           </div>
@@ -105,9 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     key={n.to}
                     to={n.to}
                     className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
-                      isActive(n.to)
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-accent/10"
+                      isActive(n.to) ? "bg-primary text-primary-foreground" : "hover:bg-accent/10"
                     }`}
                   >
                     <Icon size={16} />
