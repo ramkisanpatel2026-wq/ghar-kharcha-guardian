@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /expenses
+Disallow: /categories
+Disallow: /salary
+Disallow: /udhari
+Disallow: /reminders
+Disallow: /reports
+Disallow: /admin
