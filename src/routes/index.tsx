@@ -65,8 +65,8 @@ function Landing() {
               <span className="block text-primary">Manager</span>
             </h1>
             <p className="mt-4 max-w-md text-base text-muted-foreground">
-              {t("app.tagline")} Track salary, expenses, savings, udhari, ration and petrol —
-              print a clean monthly bill at the end of every month.
+              {t("app.tagline")} Track salary, expenses, savings, udhari, ration and petrol — print
+              a clean monthly bill at the end of every month.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
@@ -89,9 +89,13 @@ function Landing() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">This month</p>
-                  <p className="text-2xl font-semibold">₹42,300 <span className="text-sm text-success">saved</span></p>
+                  <p className="text-2xl font-semibold">
+                    ₹42,300 <span className="text-sm text-success">saved</span>
+                  </p>
                 </div>
-                <span className="rounded-full bg-primary-soft px-2 py-1 text-xs font-medium text-primary">Nov</span>
+                <span className="rounded-full bg-primary-soft px-2 py-1 text-xs font-medium text-primary">
+                  Nov
+                </span>
               </div>
               <div className="mt-5 grid grid-cols-2 gap-3">
                 {[

@@ -86,12 +86,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { name: "theme-color", content: "#0F5132" },
       { property: "og:title", content: "Ghar Kharcha Manager — Family Budget & Expense Tracker" },
-      { property: "og:description", content: "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting." },
+      {
+        property: "og:description",
+        content:
+          "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Ghar Kharcha Manager — Family Budget & Expense Tracker" },
-      { name: "description", content: "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting." },
-      { name: "twitter:description", content: "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting." },
+      {
+        name: "description",
+        content:
+          "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting.",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting.",
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

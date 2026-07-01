@@ -34,8 +34,12 @@ function Udhari() {
   const totals = useMemo(() => {
     const items = list.data ?? [];
     return {
-      give: items.filter((r) => r.direction === "give" && r.status === "unpaid").reduce((s, r) => s + Number(r.amount), 0),
-      receive: items.filter((r) => r.direction === "receive" && r.status === "unpaid").reduce((s, r) => s + Number(r.amount), 0),
+      give: items
+        .filter((r) => r.direction === "give" && r.status === "unpaid")
+        .reduce((s, r) => s + Number(r.amount), 0),
+      receive: items
+        .filter((r) => r.direction === "receive" && r.status === "unpaid")
+        .reduce((s, r) => s + Number(r.amount), 0),
     };
   }, [list.data]);
 
@@ -85,7 +89,9 @@ function Udhari() {
             tab === "give" ? "border-primary bg-primary-soft" : "border-border bg-card"
           }`}
         >
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("udhari.give")}</p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            {t("udhari.give")}
+          </p>
           <p className="mt-1 text-xl font-semibold text-destructive">{fmtINR(totals.give)}</p>
         </button>
         <button
@@ -94,7 +100,9 @@ function Udhari() {
             tab === "receive" ? "border-primary bg-primary-soft" : "border-border bg-card"
           }`}
         >
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">{t("udhari.receive")}</p>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            {t("udhari.receive")}
+          </p>
           <p className="mt-1 text-xl font-semibold text-success">{fmtINR(totals.receive)}</p>
         </button>
       </div>
@@ -109,7 +117,9 @@ function Udhari() {
             <li
               key={r.id}
               className={`flex items-center justify-between rounded-xl border p-3 shadow-card ${
-                r.status === "paid" ? "border-border bg-secondary/40 opacity-70" : "border-border bg-card"
+                r.status === "paid"
+                  ? "border-border bg-secondary/40 opacity-70"
+                  : "border-border bg-card"
               }`}
             >
               <div>
@@ -210,7 +220,10 @@ function UdhariForm({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4">
-      <form onSubmit={save} className="w-full max-w-md rounded-t-3xl bg-card p-5 shadow-hero sm:rounded-3xl">
+      <form
+        onSubmit={save}
+        className="w-full max-w-md rounded-t-3xl bg-card p-5 shadow-hero sm:rounded-3xl"
+      >
         <h2 className="text-lg font-semibold">{t("udhari.add")}</h2>
         <div className="mt-4 space-y-3">
           <div className="grid grid-cols-2 gap-2">

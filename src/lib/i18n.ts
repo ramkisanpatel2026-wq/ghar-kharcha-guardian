@@ -286,8 +286,7 @@ const hi: typeof en = {
   },
 };
 
-const stored =
-  typeof window !== "undefined" ? window.localStorage.getItem("gk_lang") : null;
+const stored = typeof window !== "undefined" ? window.localStorage.getItem("gk_lang") : null;
 
 void i18n.use(initReactI18next).init({
   resources: { en: { t: en }, hi: { t: hi } },

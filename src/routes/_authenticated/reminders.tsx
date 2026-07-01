@@ -89,7 +89,10 @@ function Reminders() {
     <div className="space-y-5">
       <h1 className="text-2xl font-semibold">{t("reminders.title")}</h1>
 
-      <form onSubmit={add} className="grid gap-2 rounded-2xl border border-border bg-card p-4 shadow-card sm:grid-cols-4">
+      <form
+        onSubmit={add}
+        className="grid gap-2 rounded-2xl border border-border bg-card p-4 shadow-card sm:grid-cols-4"
+      >
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -137,10 +140,10 @@ function Reminders() {
                 }`}
               >
                 <div>
-                  <p className={`font-medium ${r.is_done ? "line-through" : ""}`}>
-                    {r.title}
-                  </p>
-                  <p className={`text-xs ${overdue ? "text-destructive" : "text-muted-foreground"}`}>
+                  <p className={`font-medium ${r.is_done ? "line-through" : ""}`}>{r.title}</p>
+                  <p
+                    className={`text-xs ${overdue ? "text-destructive" : "text-muted-foreground"}`}
+                  >
                     {format(when, "dd MMM yyyy, HH:mm")} · {t(`reminders.kinds.${r.kind}` as const)}
                   </p>
                 </div>
