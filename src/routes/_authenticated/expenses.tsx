@@ -257,6 +257,34 @@ function ExpenseForm({
         className="w-full max-w-md rounded-t-3xl bg-card p-5 shadow-hero sm:rounded-3xl"
       >
         <h2 className="text-lg font-semibold">{t("expenses.add")}</h2>
+
+        <button
+          type="button"
+          onClick={handleMic}
+          disabled={parsing}
+          className={`mt-4 flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition ${
+            rec.state === "recording"
+              ? "border-destructive bg-destructive/10 text-destructive"
+              : "border-dashed border-primary/40 bg-primary-soft text-primary hover:bg-primary-soft/80"
+          }`}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            {parsing ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : rec.state === "recording" ? (
+              <Square size={14} />
+            ) : (
+              <Mic size={16} />
+            )}
+          </span>
+          <span className="flex-1">
+            <span className="block font-medium">{micLabel}</span>
+            {voiceHint && (
+              <span className="block truncate text-xs opacity-70">{voiceHint}</span>
+            )}
+          </span>
+        </button>
+
         <div className="mt-4 space-y-3">
           <input
             required
