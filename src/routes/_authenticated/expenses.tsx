@@ -1,12 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Plus, Trash2, Search } from "lucide-react";
+import { Plus, Trash2, Search, Mic, Loader2, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtINR } from "@/lib/format";
 import { format } from "date-fns";
+import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { blobToBase64 } from "@/lib/wav-encoder";
+import { transcribeAndParseExpense } from "@/lib/voice-expense.functions";
 
 export const Route = createFileRoute("/_authenticated/expenses")({
   head: () => ({ meta: [{ title: "Expenses — Ghar Kharcha" }] }),
@@ -176,6 +180,44 @@ function ExpenseForm({
   const [payee, setPayee] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const rec = useVoiceRecorder();
+  const parseFn = useServerFn(transcribeAndParseExpense);
+  const [parsing, setParsing] = useState(false);
+  const [voiceHint, setVoiceHint] = useState<string | null>(null);
+
+  const handleMic = async () => {
+    if (rec.state === "recording") {
+      const blob = await rec.stop();
+      if (!blob) {
+        if (rec.error) toast.error(rec.error);
+        return;
+      }
+      setParsing(true);
+      setVoiceHint(null);
+      try {
+        const audioBase64 = await blobToBase64(blob);
+        const parsed = await parseFn({ data: { audioBase64, mimeType: "audio/wav" } });
+        if (parsed.amount != null) setAmount(String(parsed.amount));
+        if (parsed.note) setNote(parsed.note);
+        if (parsed.payee) setPayee(parsed.payee);
+        if (parsed.category) {
+          const match = categories.find(
+            (c) => c.name.toLowerCase() === parsed.category!.toLowerCase(),
+          );
+          if (match) setCategoryId(match.id);
+        }
+        setVoiceHint(`"${parsed.transcript}"`);
+        toast.success(t("voice.filled"));
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : t("voice.failed"));
+      } finally {
+        setParsing(false);
+      }
+    } else {
+      await rec.start();
+    }
+  };
+
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
@@ -201,6 +243,13 @@ function ExpenseForm({
     }
   };
 
+  const micLabel =
+    rec.state === "recording"
+      ? t("voice.listening")
+      : parsing
+        ? t("voice.processing")
+        : t("voice.tap");
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4">
       <form
@@ -208,6 +257,34 @@ function ExpenseForm({
         className="w-full max-w-md rounded-t-3xl bg-card p-5 shadow-hero sm:rounded-3xl"
       >
         <h2 className="text-lg font-semibold">{t("expenses.add")}</h2>
+
+        <button
+          type="button"
+          onClick={handleMic}
+          disabled={parsing}
+          className={`mt-4 flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition ${
+            rec.state === "recording"
+              ? "border-destructive bg-destructive/10 text-destructive"
+              : "border-dashed border-primary/40 bg-primary-soft text-primary hover:bg-primary-soft/80"
+          }`}
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            {parsing ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : rec.state === "recording" ? (
+              <Square size={14} />
+            ) : (
+              <Mic size={16} />
+            )}
+          </span>
+          <span className="flex-1">
+            <span className="block font-medium">{micLabel}</span>
+            {voiceHint && (
+              <span className="block truncate text-xs opacity-70">{voiceHint}</span>
+            )}
+          </span>
+        </button>
+
         <div className="mt-4 space-y-3">
           <input
             required
