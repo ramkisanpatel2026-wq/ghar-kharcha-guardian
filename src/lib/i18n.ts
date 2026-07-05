@@ -16,8 +16,10 @@ const en = {
     reports: "Reports",
     admin: "Admin",
     assistant: "AI",
+    savings: "Savings",
     signOut: "Sign out",
   },
+
   assistant: {
     title: "AI Assistant",
     subtitle: "Ask about your spending, savings, and budget",
@@ -49,6 +51,11 @@ const en = {
   dashboard: {
     hello: "Namaste",
     thisMonth: "This month",
+    thisMonthSalary: "This Month Salary",
+    selectMonth: "Select month",
+    setSalary: "Set salary",
+    editSalary: "Edit salary",
+    noSalary: "No salary added",
     income: "Income",
     expense: "Expense",
     balance: "Balance",
@@ -61,6 +68,7 @@ const en = {
     noExpenses: "No expenses this month yet",
     quickAdd: "Quick add expense",
   },
+
   expenses: {
     title: "Expenses",
     add: "Add expense",
@@ -97,6 +105,20 @@ const en = {
     thisMonthTotal: "This month's income",
     empty: "No income entries yet.",
   },
+  savings: {
+    title: "Savings",
+    add: "Add savings",
+    amount: "Amount",
+    category: "Where saved",
+    date: "Date",
+    note: "Note",
+    save: "Save",
+    delete: "Delete",
+    total: "Total savings",
+    thisMonth: "Saved this month",
+    empty: "No savings entries yet. Start saving!",
+  },
+
   udhari: {
     title: "Udhari",
     give: "Money to give",
@@ -173,8 +195,10 @@ const hi: typeof en = {
     reports: "रिपोर्ट",
     admin: "एडमिन",
     assistant: "AI",
+    savings: "बचत",
     signOut: "साइन आउट",
   },
+
   assistant: {
     title: "AI सहायक",
     subtitle: "खर्च, बचत और बजट के बारे में पूछें",
@@ -206,6 +230,11 @@ const hi: typeof en = {
   dashboard: {
     hello: "नमस्ते",
     thisMonth: "इस महीने",
+    thisMonthSalary: "इस महीने का वेतन",
+    selectMonth: "महीना चुनें",
+    setSalary: "वेतन दर्ज करें",
+    editSalary: "वेतन बदलें",
+    noSalary: "कोई वेतन दर्ज नहीं",
     income: "आय",
     expense: "खर्च",
     balance: "बचा हुआ",
@@ -218,6 +247,7 @@ const hi: typeof en = {
     noExpenses: "इस महीने कोई खर्च नहीं",
     quickAdd: "जल्दी से खर्च जोड़ें",
   },
+
   expenses: {
     title: "खर्चे",
     add: "खर्च जोड़ें",
@@ -254,6 +284,20 @@ const hi: typeof en = {
     thisMonthTotal: "इस महीने की आय",
     empty: "अभी कोई आय नहीं।",
   },
+  savings: {
+    title: "बचत",
+    add: "बचत जोड़ें",
+    amount: "राशि",
+    category: "कहाँ बचाया",
+    date: "तारीख़",
+    note: "टिप्पणी",
+    save: "सहेजें",
+    delete: "हटाएँ",
+    total: "कुल बचत",
+    thisMonth: "इस महीने की बचत",
+    empty: "अभी कोई बचत नहीं। बचत शुरू करें!",
+  },
+
   udhari: {
     title: "उधारी",
     give: "देनी है",

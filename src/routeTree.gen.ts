@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUdhariRouteImport } from './routes/_authenticated/udhari'
+import { Route as AuthenticatedSavingsRouteImport } from './routes/_authenticated/savings'
 import { Route as AuthenticatedSalaryRouteImport } from './routes/_authenticated/salary'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedRemindersRouteImport } from './routes/_authenticated/reminders'
@@ -45,6 +46,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedUdhariRoute = AuthenticatedUdhariRouteImport.update({
   id: '/udhari',
   path: '/udhari',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSavingsRoute = AuthenticatedSavingsRouteImport.update({
+  id: '/savings',
+  path: '/savings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSalaryRoute = AuthenticatedSalaryRouteImport.update({
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/reminders': typeof AuthenticatedRemindersRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/salary': typeof AuthenticatedSalaryRoute
+  '/savings': typeof AuthenticatedSavingsRoute
   '/udhari': typeof AuthenticatedUdhariRoute
 }
 export interface FileRoutesByTo {
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/reminders': typeof AuthenticatedRemindersRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/salary': typeof AuthenticatedSalaryRoute
+  '/savings': typeof AuthenticatedSavingsRoute
   '/udhari': typeof AuthenticatedUdhariRoute
 }
 export interface FileRoutesById {
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/_authenticated/reminders': typeof AuthenticatedRemindersRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/salary': typeof AuthenticatedSalaryRoute
+  '/_authenticated/savings': typeof AuthenticatedSavingsRoute
   '/_authenticated/udhari': typeof AuthenticatedUdhariRoute
 }
 export interface FileRouteTypes {
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/reminders'
     | '/reports'
     | '/salary'
+    | '/savings'
     | '/udhari'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/reminders'
     | '/reports'
     | '/salary'
+    | '/savings'
     | '/udhari'
   id:
     | '__root__'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reminders'
     | '/_authenticated/reports'
     | '/_authenticated/salary'
+    | '/_authenticated/savings'
     | '/_authenticated/udhari'
   fileRoutesById: FileRoutesById
 }
@@ -220,6 +232,13 @@ declare module '@tanstack/react-router' {
       path: '/udhari'
       fullPath: '/udhari'
       preLoaderRoute: typeof AuthenticatedUdhariRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/savings': {
+      id: '/_authenticated/savings'
+      path: '/savings'
+      fullPath: '/savings'
+      preLoaderRoute: typeof AuthenticatedSavingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/salary': {
@@ -290,6 +309,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRemindersRoute: typeof AuthenticatedRemindersRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSalaryRoute: typeof AuthenticatedSalaryRoute
+  AuthenticatedSavingsRoute: typeof AuthenticatedSavingsRoute
   AuthenticatedUdhariRoute: typeof AuthenticatedUdhariRoute
 }
 
@@ -302,6 +322,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRemindersRoute: AuthenticatedRemindersRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSalaryRoute: AuthenticatedSalaryRoute,
+  AuthenticatedSavingsRoute: AuthenticatedSavingsRoute,
   AuthenticatedUdhariRoute: AuthenticatedUdhariRoute,
 }
 
@@ -317,13 +338,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

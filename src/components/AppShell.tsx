@@ -14,7 +14,9 @@ import {
   Menu,
   X,
   Sparkles,
+  PiggyBank,
 } from "lucide-react";
+
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LangToggle } from "@/components/LangToggle";
@@ -46,6 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const nav: Array<{ to: string; label: string; icon: typeof LayoutDashboard }> = [
     { to: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
     { to: "/expenses", label: t("nav.expenses"), icon: ReceiptText },
+    { to: "/savings", label: t("nav.savings"), icon: PiggyBank },
     { to: "/assistant", label: t("nav.assistant"), icon: Sparkles },
     { to: "/udhari", label: t("nav.udhari"), icon: HandCoins },
     { to: "/reports", label: t("nav.reports"), icon: FileText },
@@ -53,6 +56,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/salary", label: t("nav.salary"), icon: Wallet },
     { to: "/reminders", label: t("nav.reminders"), icon: BellRing },
   ];
+
   if (isAdmin.data) nav.push({ to: "/admin", label: t("nav.admin"), icon: Shield });
 
   const signOut = async () => {
