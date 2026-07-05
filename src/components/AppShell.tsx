@@ -14,7 +14,9 @@ import {
   Menu,
   X,
   Sparkles,
+  PiggyBank,
 } from "lucide-react";
+
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LangToggle } from "@/components/LangToggle";
