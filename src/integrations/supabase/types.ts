@@ -181,6 +181,39 @@ export type Database = {
         }
         Relationships: []
       }
+      savings: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          id: string
+          note: string | null
+          saved_on: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          saved_on?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          saved_on?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       udhari: {
         Row: {
           amount: number
