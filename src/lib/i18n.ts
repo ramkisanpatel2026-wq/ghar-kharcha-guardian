@@ -175,8 +175,10 @@ const hi: typeof en = {
     reports: "रिपोर्ट",
     admin: "एडमिन",
     assistant: "AI",
+    savings: "बचत",
     signOut: "साइन आउट",
   },
+
   assistant: {
     title: "AI सहायक",
     subtitle: "खर्च, बचत और बजट के बारे में पूछें",
