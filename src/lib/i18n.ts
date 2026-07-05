@@ -216,6 +216,11 @@ const hi: typeof en = {
   dashboard: {
     hello: "नमस्ते",
     thisMonth: "इस महीने",
+    thisMonthSalary: "इस महीने का वेतन",
+    selectMonth: "महीना चुनें",
+    setSalary: "वेतन दर्ज करें",
+    editSalary: "वेतन बदलें",
+    noSalary: "कोई वेतन दर्ज नहीं",
     income: "आय",
     expense: "खर्च",
     balance: "बचा हुआ",
@@ -228,6 +233,7 @@ const hi: typeof en = {
     noExpenses: "इस महीने कोई खर्च नहीं",
     quickAdd: "जल्दी से खर्च जोड़ें",
   },
+
   expenses: {
     title: "खर्चे",
     add: "खर्च जोड़ें",
