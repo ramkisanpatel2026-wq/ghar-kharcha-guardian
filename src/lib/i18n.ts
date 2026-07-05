@@ -105,6 +105,20 @@ const en = {
     thisMonthTotal: "This month's income",
     empty: "No income entries yet.",
   },
+  savings: {
+    title: "Savings",
+    add: "Add savings",
+    amount: "Amount",
+    category: "Where saved",
+    date: "Date",
+    note: "Note",
+    save: "Save",
+    delete: "Delete",
+    total: "Total savings",
+    thisMonth: "Saved this month",
+    empty: "No savings entries yet. Start saving!",
+  },
+
   udhari: {
     title: "Udhari",
     give: "Money to give",
