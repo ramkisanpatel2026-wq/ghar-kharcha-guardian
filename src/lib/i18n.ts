@@ -284,6 +284,20 @@ const hi: typeof en = {
     thisMonthTotal: "इस महीने की आय",
     empty: "अभी कोई आय नहीं।",
   },
+  savings: {
+    title: "बचत",
+    add: "बचत जोड़ें",
+    amount: "राशि",
+    category: "कहाँ बचाया",
+    date: "तारीख़",
+    note: "टिप्पणी",
+    save: "सहेजें",
+    delete: "हटाएँ",
+    total: "कुल बचत",
+    thisMonth: "इस महीने की बचत",
+    empty: "अभी कोई बचत नहीं। बचत शुरू करें!",
+  },
+
   udhari: {
     title: "उधारी",
     give: "देनी है",
