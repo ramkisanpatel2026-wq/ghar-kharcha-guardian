@@ -51,6 +51,11 @@ const en = {
   dashboard: {
     hello: "Namaste",
     thisMonth: "This month",
+    thisMonthSalary: "This Month Salary",
+    selectMonth: "Select month",
+    setSalary: "Set salary",
+    editSalary: "Edit salary",
+    noSalary: "No salary added",
     income: "Income",
     expense: "Expense",
     balance: "Balance",
@@ -63,6 +68,7 @@ const en = {
     noExpenses: "No expenses this month yet",
     quickAdd: "Quick add expense",
   },
+
   expenses: {
     title: "Expenses",
     add: "Add expense",
