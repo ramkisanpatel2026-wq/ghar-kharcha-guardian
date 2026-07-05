@@ -16,8 +16,10 @@ const en = {
     reports: "Reports",
     admin: "Admin",
     assistant: "AI",
+    savings: "Savings",
     signOut: "Sign out",
   },
+
   assistant: {
     title: "AI Assistant",
     subtitle: "Ask about your spending, savings, and budget",
