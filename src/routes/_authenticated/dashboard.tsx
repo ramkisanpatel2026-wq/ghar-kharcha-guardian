@@ -17,7 +17,7 @@ import {
   YAxis,
 } from "recharts";
 import { format, parseISO, isAfter } from "date-fns";
-import { ArrowRight, Plus, Pencil, Check, X, PiggyBank } from "lucide-react";
+import { ArrowRight, Pencil, Check, X, PiggyBank } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Ghar Kharcha" }] }),
