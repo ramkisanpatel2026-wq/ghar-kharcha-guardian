@@ -1,0 +1,1 @@
+ALTER TABLE public.salary_entries ADD CONSTRAINT salary_entries_user_month_source_unique UNIQUE (user_id, month, source);
