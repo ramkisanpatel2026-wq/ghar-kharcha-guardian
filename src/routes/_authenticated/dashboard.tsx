@@ -17,7 +17,7 @@ import {
   YAxis,
 } from "recharts";
 import { format, parseISO, isAfter } from "date-fns";
-import { ArrowRight, Plus, Pencil, Check, X, PiggyBank } from "lucide-react";
+import { ArrowRight, Pencil, Check, X, PiggyBank } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Ghar Kharcha" }] }),
@@ -117,22 +117,20 @@ function Dashboard() {
 
   const upsertSalary = useMutation({
     mutationFn: async (amount: number) => {
-      const { data: user } = await supabase.auth.getUser();
-      if (d?.salaryEntry) {
-        const { error } = await supabase
-          .from("salary_entries")
-          .update({ amount })
-          .eq("id", d.salaryEntry.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("salary_entries").insert({
-          user_id: user.user!.id,
-          amount,
-          month: monthISO,
-          source: "Salary",
-        });
-        if (error) throw error;
-      }
+      const { data: userRes, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userRes.user) throw userErr ?? new Error("Not signed in");
+      const { error } = await supabase
+        .from("salary_entries")
+        .upsert(
+          {
+            user_id: userRes.user.id,
+            amount,
+            month: monthISO,
+            source: "Salary",
+          },
+          { onConflict: "user_id,month,source" },
+        );
+      if (error) throw error;
     },
     onSuccess: () => {
       toast.success(t("common.success"));
@@ -158,20 +156,12 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            {t("dashboard.hello")}
-            {d?.name ? `, ${d.name}` : ""}
-          </p>
-          <h1 className="text-2xl font-semibold">Ghar Kharcha AI</h1>
-        </div>
-        <Link
-          to="/expenses"
-          className="inline-flex items-center gap-1 rounded-lg gradient-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow-card"
-        >
-          <Plus size={16} /> {t("expenses.add")}
-        </Link>
+      <div>
+        <p className="text-sm text-muted-foreground">
+          {t("dashboard.hello")}
+          {d?.name ? `, ${d.name}` : ""}
+        </p>
+        <h1 className="text-2xl font-semibold">Ghar Kharcha AI</h1>
       </div>
 
       {/* Hero salary card with month selector */}
