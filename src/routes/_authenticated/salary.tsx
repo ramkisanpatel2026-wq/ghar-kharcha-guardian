@@ -97,7 +97,6 @@ function Salary() {
           className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
         />
         <input
-          required
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           type="number"
