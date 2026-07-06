@@ -156,20 +156,12 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">
-            {t("dashboard.hello")}
-            {d?.name ? `, ${d.name}` : ""}
-          </p>
-          <h1 className="text-2xl font-semibold">Ghar Kharcha AI</h1>
-        </div>
-        <Link
-          to="/expenses"
-          className="inline-flex items-center gap-1 rounded-lg gradient-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow-card"
-        >
-          <Plus size={16} /> {t("expenses.add")}
-        </Link>
+      <div>
+        <p className="text-sm text-muted-foreground">
+          {t("dashboard.hello")}
+          {d?.name ? `, ${d.name}` : ""}
+        </p>
+        <h1 className="text-2xl font-semibold">Ghar Kharcha AI</h1>
       </div>
 
       {/* Hero salary card with month selector */}
