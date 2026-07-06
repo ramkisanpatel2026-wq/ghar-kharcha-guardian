@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtINR } from "@/lib/format";
+import { normalizeSalaryAmount, salaryKeyFromMonthISO } from "@/lib/salary";
 import {
   PieChart,
   Pie,
@@ -52,13 +53,18 @@ function Dashboard() {
   const qc = useQueryClient();
   const [monthPick, setMonthPick] = useState(currentMonthISO().slice(0, 7));
   const monthISO = `${monthPick}-01`;
+  const salaryKey = salaryKeyFromMonthISO(monthISO);
   const { startISO, endISO } = monthRangeISO(monthISO);
 
   const q = useQuery({
     queryKey: ["dashboard", monthISO],
     queryFn: async () => {
       const [inc, exp, cats, udh, rem, prof, sav] = await Promise.all([
-        supabase.from("salary_entries").select("id, amount, source").eq("month", monthISO),
+        supabase
+          .from("salary_entries")
+          .select("id, amount, source, salary_key")
+          .eq("salary_key", salaryKey)
+          .maybeSingle(),
         supabase
           .from("expenses")
           .select("amount, category_id, expense_date")
@@ -79,8 +85,15 @@ function Dashboard() {
           .gte("saved_on", startISO)
           .lt("saved_on", endISO),
       ]);
-      const salaryRows = inc.data ?? [];
-      const income = salaryRows.reduce((s, r) => s + Number(r.amount), 0);
+      if (inc.error) throw inc.error;
+      if (exp.error) throw exp.error;
+      if (cats.error) throw cats.error;
+      if (udh.error) throw udh.error;
+      if (rem.error) throw rem.error;
+      if (prof.error) throw prof.error;
+      if (sav.error) throw sav.error;
+
+      const income = normalizeSalaryAmount(inc.data?.amount);
       const expense = (exp.data ?? []).reduce((s, r) => s + Number(r.amount), 0);
       const savedThisMonth = (sav.data ?? []).reduce((s, r) => s + Number(r.amount), 0);
       const catMap = new Map((cats.data ?? []).map((c) => [c.id, c.name]));
@@ -108,7 +121,7 @@ function Dashboard() {
         receive,
         reminders: rem.data ?? [],
         name: prof.data?.full_name ?? "",
-        salaryEntry: salaryRows[0] ?? null,
+        salaryEntry: inc.data ?? null,
       };
     },
   });
@@ -117,6 +130,7 @@ function Dashboard() {
 
   const upsertSalary = useMutation({
     mutationFn: async (amount: number) => {
+      const safeAmount = normalizeSalaryAmount(amount);
       const { data: userRes, error: userErr } = await supabase.auth.getUser();
       if (userErr || !userRes.user) throw userErr ?? new Error("Not signed in");
       const { error } = await supabase
@@ -124,16 +138,34 @@ function Dashboard() {
         .upsert(
           {
             user_id: userRes.user.id,
-            amount,
+            amount: safeAmount,
             month: monthISO,
+            salary_key: salaryKey,
             source: "Salary",
           },
-          { onConflict: "user_id,month,source" },
+          { onConflict: "user_id,month" },
         );
       if (error) throw error;
+      return safeAmount;
     },
-    onSuccess: () => {
+    onSuccess: (amount) => {
       toast.success(t("common.success"));
+      qc.setQueryData(["dashboard", monthISO], (old: typeof d) =>
+        old
+          ? {
+              ...old,
+              income: amount,
+              balance: amount - old.expense - old.savedThisMonth,
+              salaryEntry: {
+                ...(old.salaryEntry ?? {}),
+                amount,
+                month: monthISO,
+                salary_key: salaryKey,
+                source: "Salary",
+              },
+            }
+          : old,
+      );
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["salary"] });
     },
@@ -339,8 +371,7 @@ function SalaryHero({
   const [draft, setDraft] = useState("");
 
   const submit = () => {
-    const n = Number(draft);
-    if (!isFinite(n) || n < 0) return;
+    const n = normalizeSalaryAmount(draft);
     onSave(n);
     setEditing(false);
   };
@@ -370,6 +401,7 @@ function SalaryHero({
               autoFocus
               type="number"
               min="0"
+              step="1"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submit()}
@@ -399,7 +431,7 @@ function SalaryHero({
             </p>
             <button
               onClick={() => {
-                setDraft(amount > 0 ? String(Math.round(amount)) : "");
+                setDraft(String(normalizeSalaryAmount(amount)));
                 setEditing(true);
               }}
               className="inline-flex items-center gap-1 rounded-lg bg-white/20 px-3 py-1.5 text-sm font-medium backdrop-blur hover:bg-white/30"
