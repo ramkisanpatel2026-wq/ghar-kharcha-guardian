@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtINR, monthKey } from "@/lib/format";
+import { normalizeSalaryAmount, salaryKeyFromMonthISO } from "@/lib/salary";
 import { format, parseISO } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/salary")({
@@ -37,14 +38,21 @@ function Salary() {
     e.preventDefault();
     setBusy(true);
     try {
-      const { data: user } = await supabase.auth.getUser();
-      const { error } = await supabase.from("salary_entries").insert({
-        user_id: user.user!.id,
-        source,
-        amount: Number(amount),
-        month: `${month}-01`,
-        note: note || null,
-      });
+      const safeMonth = `${month}-01`;
+      const safeAmount = normalizeSalaryAmount(amount);
+      const { data: user, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !user.user) throw userErr ?? new Error("Not signed in");
+      const { error } = await supabase.from("salary_entries").upsert(
+        {
+          user_id: user.user.id,
+          source: source.trim() || "Salary",
+          amount: safeAmount,
+          month: safeMonth,
+          salary_key: salaryKeyFromMonthISO(safeMonth),
+          note: note.trim() || null,
+        },
+        { onConflict: "user_id,month" },
+      );
       if (error) throw error;
       toast.success(t("common.success"));
       setAmount("");
@@ -89,11 +97,11 @@ function Salary() {
           className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
         />
         <input
-          required
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           type="number"
           min="0"
+          step="1"
           placeholder={t("salary.amount")}
           className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
         />

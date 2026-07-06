@@ -158,15 +158,17 @@ export type Database = {
           id: string
           month: string
           note: string | null
+          salary_key: string
           source: string
           user_id: string
         }
         Insert: {
-          amount: number
+          amount?: number
           created_at?: string
           id?: string
           month: string
           note?: string | null
+          salary_key: string
           source?: string
           user_id: string
         }
@@ -176,6 +178,7 @@ export type Database = {
           id?: string
           month?: string
           note?: string | null
+          salary_key?: string
           source?: string
           user_id?: string
         }
