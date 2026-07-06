@@ -117,22 +117,20 @@ function Dashboard() {
 
   const upsertSalary = useMutation({
     mutationFn: async (amount: number) => {
-      const { data: user } = await supabase.auth.getUser();
-      if (d?.salaryEntry) {
-        const { error } = await supabase
-          .from("salary_entries")
-          .update({ amount })
-          .eq("id", d.salaryEntry.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("salary_entries").insert({
-          user_id: user.user!.id,
-          amount,
-          month: monthISO,
-          source: "Salary",
-        });
-        if (error) throw error;
-      }
+      const { data: userRes, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userRes.user) throw userErr ?? new Error("Not signed in");
+      const { error } = await supabase
+        .from("salary_entries")
+        .upsert(
+          {
+            user_id: userRes.user.id,
+            amount,
+            month: monthISO,
+            source: "Salary",
+          },
+          { onConflict: "user_id,month,source" },
+        );
+      if (error) throw error;
     },
     onSuccess: () => {
       toast.success(t("common.success"));
