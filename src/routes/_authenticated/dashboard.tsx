@@ -5,7 +5,12 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtINR } from "@/lib/format";
-import { normalizeSalaryAmount, salaryKeyFromMonthISO } from "@/lib/salary";
+import {
+  normalizeSalaryAmount,
+  parseSalaryAmount,
+  salaryKeyFromMonthISO,
+  writeSalaryLocalCache,
+} from "@/lib/salary";
 import {
   PieChart,
   Pie,
@@ -129,11 +134,12 @@ function Dashboard() {
   const d = q.data;
 
   const upsertSalary = useMutation({
-    mutationFn: async (amount: number) => {
-      const safeAmount = normalizeSalaryAmount(amount);
+    mutationFn: async ({ amount, monthISO, salaryKey }: { amount: number; monthISO: string; salaryKey: string }) => {
+      const safeAmount = parseSalaryAmount(amount);
+      if (safeAmount === null) throw new Error("Enter valid salary amount");
       const { data: userRes, error: userErr } = await supabase.auth.getUser();
       if (userErr || !userRes.user) throw userErr ?? new Error("Not signed in");
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("salary_entries")
         .upsert(
           {
@@ -143,12 +149,20 @@ function Dashboard() {
             salary_key: salaryKey,
             source: "Salary",
           },
-          { onConflict: "user_id,month" },
-        );
+          { onConflict: "user_id,salary_key" },
+        )
+        .select("id, amount, month, source, salary_key")
+        .single();
       if (error) throw error;
-      return safeAmount;
+      return {
+        amount: normalizeSalaryAmount(data.amount),
+        monthISO: data.month ?? monthISO,
+        salaryKey: data.salary_key ?? salaryKey,
+        row: data,
+      };
     },
-    onSuccess: (amount) => {
+    onSuccess: ({ amount, monthISO, salaryKey, row }) => {
+      writeSalaryLocalCache(monthISO, amount);
       toast.success(t("common.success"));
       qc.setQueryData(["dashboard", monthISO], (old: typeof d) =>
         old
@@ -157,7 +171,7 @@ function Dashboard() {
               income: amount,
               balance: amount - old.expense - old.savedThisMonth,
               salaryEntry: {
-                ...(old.salaryEntry ?? {}),
+                ...row,
                 amount,
                 month: monthISO,
                 salary_key: salaryKey,
@@ -166,8 +180,9 @@ function Dashboard() {
             }
           : old,
       );
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["dashboard", monthISO] });
       qc.invalidateQueries({ queryKey: ["salary"] });
+      qc.invalidateQueries({ queryKey: ["report", monthISO] });
     },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Failed"),
   });
@@ -202,7 +217,8 @@ function Dashboard() {
         month={monthPick}
         onMonthChange={setMonthPick}
         amount={d?.income ?? 0}
-        onSave={(v) => upsertSalary.mutate(v)}
+        hasSalary={Boolean(d?.salaryEntry)}
+        onSave={(amount) => upsertSalary.mutate({ amount, monthISO, salaryKey })}
         saving={upsertSalary.isPending}
       />
 
@@ -356,6 +372,7 @@ function SalaryHero({
   month,
   onMonthChange,
   amount,
+  hasSalary,
   onSave,
   saving,
 }: {
@@ -363,6 +380,7 @@ function SalaryHero({
   month: string;
   onMonthChange: (v: string) => void;
   amount: number;
+  hasSalary: boolean;
   onSave: (n: number) => void;
   saving: boolean;
 }) {
@@ -371,7 +389,11 @@ function SalaryHero({
   const [draft, setDraft] = useState("");
 
   const submit = () => {
-    const n = normalizeSalaryAmount(draft);
+    const n = parseSalaryAmount(draft);
+    if (n === null) {
+      toast.error("Enter valid salary amount");
+      return;
+    }
     onSave(n);
     setEditing(false);
   };
@@ -437,12 +459,12 @@ function SalaryHero({
               className="inline-flex items-center gap-1 rounded-lg bg-white/20 px-3 py-1.5 text-sm font-medium backdrop-blur hover:bg-white/30"
             >
               <Pencil size={14} />
-              {amount > 0 ? t("dashboard.editSalary") : t("dashboard.setSalary")}
+              {hasSalary ? t("dashboard.editSalary") : t("dashboard.setSalary")}
             </button>
           </>
         )}
       </div>
-      {amount === 0 && !editing && (
+      {!hasSalary && amount === 0 && !editing && (
         <p className="mt-2 text-xs opacity-80">{t("dashboard.noSalary")}</p>
       )}
     </section>
