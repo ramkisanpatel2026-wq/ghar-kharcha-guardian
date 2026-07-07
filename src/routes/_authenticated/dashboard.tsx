@@ -217,6 +217,7 @@ function Dashboard() {
         month={monthPick}
         onMonthChange={setMonthPick}
         amount={d?.income ?? 0}
+        hasSalary={Boolean(d?.salaryEntry)}
         onSave={(amount) => upsertSalary.mutate({ amount, monthISO, salaryKey })}
         saving={upsertSalary.isPending}
       />
@@ -371,6 +372,7 @@ function SalaryHero({
   month,
   onMonthChange,
   amount,
+  hasSalary,
   onSave,
   saving,
 }: {
@@ -378,6 +380,7 @@ function SalaryHero({
   month: string;
   onMonthChange: (v: string) => void;
   amount: number;
+  hasSalary: boolean;
   onSave: (n: number) => void;
   saving: boolean;
 }) {
@@ -456,12 +459,12 @@ function SalaryHero({
               className="inline-flex items-center gap-1 rounded-lg bg-white/20 px-3 py-1.5 text-sm font-medium backdrop-blur hover:bg-white/30"
             >
               <Pencil size={14} />
-              {amount > 0 ? t("dashboard.editSalary") : t("dashboard.setSalary")}
+              {hasSalary ? t("dashboard.editSalary") : t("dashboard.setSalary")}
             </button>
           </>
         )}
       </div>
-      {amount === 0 && !editing && (
+      {!hasSalary && amount === 0 && !editing && (
         <p className="mt-2 text-xs opacity-80">{t("dashboard.noSalary")}</p>
       )}
     </section>
