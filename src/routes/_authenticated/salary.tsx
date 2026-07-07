@@ -1,12 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtINR, monthKey } from "@/lib/format";
-import { normalizeSalaryAmount, salaryKeyFromMonthISO } from "@/lib/salary";
+import {
+  normalizeSalaryAmount,
+  parseSalaryAmount,
+  salaryKeyFromMonthISO,
+  salaryMonthISOFromPicker,
+  writeSalaryLocalCache,
+} from "@/lib/salary";
 import { format, parseISO } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/salary")({
@@ -25,40 +31,80 @@ function Salary() {
 
   const list = useQuery({
     queryKey: ["salary"],
-    queryFn: async () =>
-      (await supabase.from("salary_entries").select("*").order("month", { ascending: false }))
-        .data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("salary_entries")
+        .select("*")
+        .order("month", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
   });
+
+  const selectedMonthISO = salaryMonthISOFromPicker(month) ?? monthKey();
+  const selectedSalary = useMemo(
+    () =>
+      (list.data ?? []).find(
+        (r) => r.salary_key === salaryKeyFromMonthISO(selectedMonthISO) || r.month === selectedMonthISO,
+      ) ?? null,
+    [list.data, selectedMonthISO],
+  );
+
+  useEffect(() => {
+    if (selectedSalary) {
+      setAmount(String(normalizeSalaryAmount(selectedSalary.amount)));
+      setNote(selectedSalary.note ?? "");
+      setSource(selectedSalary.source ?? "Salary");
+    } else {
+      setAmount("");
+      setNote("");
+      setSource("Salary");
+    }
+  }, [selectedSalary]);
 
   const thisMonth = (list.data ?? [])
     .filter((r) => r.month === monthKey())
-    .reduce((s, r) => s + Number(r.amount), 0);
+    .reduce((s, r) => s + normalizeSalaryAmount(r.amount), 0);
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     try {
-      const safeMonth = `${month}-01`;
-      const safeAmount = normalizeSalaryAmount(amount);
+      const safeMonth = salaryMonthISOFromPicker(month);
+      if (!safeMonth) throw new Error("Select a valid month");
+      const safeAmount = parseSalaryAmount(amount);
+      if (safeAmount === null) throw new Error("Enter valid salary amount");
+      const salaryKey = salaryKeyFromMonthISO(safeMonth);
       const { data: user, error: userErr } = await supabase.auth.getUser();
       if (userErr || !user.user) throw userErr ?? new Error("Not signed in");
-      const { error } = await supabase.from("salary_entries").upsert(
-        {
-          user_id: user.user.id,
-          source: source.trim() || "Salary",
-          amount: safeAmount,
-          month: safeMonth,
-          salary_key: salaryKeyFromMonthISO(safeMonth),
-          note: note.trim() || null,
-        },
-        { onConflict: "user_id,month" },
-      );
+      const { data, error } = await supabase
+        .from("salary_entries")
+        .upsert(
+          {
+            user_id: user.user.id,
+            source: source.trim() || "Salary",
+            amount: safeAmount,
+            month: safeMonth,
+            salary_key: salaryKey,
+            note: note.trim() || null,
+          },
+          { onConflict: "user_id,salary_key" },
+        )
+        .select("*")
+        .single();
       if (error) throw error;
+      writeSalaryLocalCache(safeMonth, normalizeSalaryAmount(data.amount));
       toast.success(t("common.success"));
-      setAmount("");
-      setNote("");
+      qc.setQueryData(["salary"], (old: typeof list.data) => {
+        const rows = old ?? [];
+        const nextRows = rows.filter(
+          (r) => r.salary_key !== data.salary_key && r.month !== data.month,
+        );
+        return [data, ...nextRows].sort((a, b) => b.month.localeCompare(a.month));
+      });
       qc.invalidateQueries({ queryKey: ["salary"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["dashboard", safeMonth] });
+      qc.invalidateQueries({ queryKey: ["report", safeMonth] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
     } finally {
