@@ -34,6 +34,9 @@ function Assistant() {
   const ask = useServerFn(askAssistant);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
+  const [speakingIdx, setSpeakingIdx] = useState<number | null>(null);
+  const [ttsLoadingIdx, setTtsLoadingIdx] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
