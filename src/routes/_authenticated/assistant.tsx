@@ -74,6 +74,56 @@ function Assistant() {
     mutation.mutate(next);
   };
 
+  const stopSpeaking = () => {
+    audioRef.current?.pause();
+    if (audioRef.current) {
+      audioRef.current.src = "";
+    }
+    audioRef.current = null;
+    setSpeakingIdx(null);
+  };
+
+  const speak = async (idx: number, text: string) => {
+    if (speakingIdx === idx) {
+      stopSpeaking();
+      return;
+    }
+    stopSpeaking();
+    setTtsLoadingIdx(idx);
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error(await res.text().catch(() => "TTS failed"));
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => {
+        setSpeakingIdx(null);
+        URL.revokeObjectURL(url);
+      };
+      audio.onerror = () => {
+        setSpeakingIdx(null);
+        URL.revokeObjectURL(url);
+      };
+      setSpeakingIdx(idx);
+      await audio.play();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Speech failed");
+      setSpeakingIdx(null);
+    } finally {
+      setTtsLoadingIdx(null);
+    }
+  };
+
+  useEffect(() => {
+    return () => stopSpeaking();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const suggestions = i18n.language === "hi" ? SUGGESTIONS_HI : SUGGESTIONS_EN;
 
   return (
