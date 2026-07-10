@@ -178,8 +178,26 @@ function Assistant() {
               }
             >
               {m.role === "assistant" ? (
-                <div className="prose prose-sm max-w-none prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0 prose-strong:text-foreground prose-headings:mt-2 prose-headings:mb-1">
-                  <ReactMarkdown>{m.content}</ReactMarkdown>
+                <div>
+                  <div className="prose prose-sm max-w-none prose-p:my-1.5 prose-ul:my-1.5 prose-li:my-0 prose-strong:text-foreground prose-headings:mt-2 prose-headings:mb-1">
+                    <ReactMarkdown>{m.content}</ReactMarkdown>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => speak(i, m.content)}
+                    disabled={ttsLoadingIdx === i}
+                    className="mt-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-secondary hover:text-foreground disabled:opacity-60"
+                    aria-label={speakingIdx === i ? "Stop" : "Speak"}
+                  >
+                    {ttsLoadingIdx === i ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : speakingIdx === i ? (
+                      <Square size={12} />
+                    ) : (
+                      <Volume2 size={12} />
+                    )}
+                    <span>{speakingIdx === i ? "Stop" : "Speak"}</span>
+                  </button>
                 </div>
               ) : (
                 <p className="whitespace-pre-wrap break-words">{m.content}</p>
