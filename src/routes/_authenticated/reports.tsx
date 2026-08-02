@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Download, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtINR, monthRange } from "@/lib/format";
+import { fmtINR, fmtPdfINR, monthRange } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({ meta: [{ title: "Monthly report — Ghar Kharcha" }] }),
