@@ -27,8 +27,12 @@ const config: CapacitorConfig = {
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
     },
-tatusBarPlaceholder: undefined,
+    StatusBar: {
+      style: "DARK",
+      backgroundColor: "#0F5132",
+    },
   },
+
 };
 
 export default config;
