@@ -12,10 +12,57 @@ export const Route = createFileRoute("/")({
         content:
           "Simple, printable monthly budgeting for Indian families. Track salary, ration, petrol, udhari and more — in Hindi or English.",
       },
-      { property: "og:title", content: "Ghar Kharcha Manager" },
+      { property: "og:title", content: "Ghar Kharcha Manager — Family Budget Tracker" },
       {
         property: "og:description",
-        content: "Family budgeting made simple. English & Hindi.",
+        content:
+          "Track salary, expenses, savings, udhari, ration and petrol month by month, then print a clean monthly bill. Hindi & English.",
+      },
+      { property: "og:url", content: "https://ghar-kharcha-guardian.lovable.app/" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [{ rel: "canonical", href: "https://ghar-kharcha-guardian.lovable.app/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "Ghar Kharcha Manager",
+              url: "https://ghar-kharcha-guardian.lovable.app/",
+              logo: "https://ghar-kharcha-guardian.lovable.app/icon-512.png",
+              description:
+                "Family budgeting tool for Indian middle-class households — salary, expenses, savings and udhari tracking.",
+            },
+            {
+              "@type": "WebSite",
+              name: "Ghar Kharcha Manager",
+              url: "https://ghar-kharcha-guardian.lovable.app/",
+              description:
+                "Track salary, expenses, savings, udhari, ration and petrol, and print a monthly bill. Hindi & English.",
+            },
+            {
+              "@type": "SoftwareApplication",
+              name: "Ghar Kharcha Manager",
+              url: "https://ghar-kharcha-guardian.lovable.app/",
+              applicationCategory: "FinanceApplication",
+              operatingSystem: "Web, Android, iOS",
+              description:
+                "Family expense and budget manager with salary tracking, savings, udhari, reminders and printable monthly PDF reports.",
+              featureList: [
+                "Salary and income tracking",
+                "Category-wise expense tracking",
+                "Savings and balance calculation",
+                "Udhari (lending & borrowing) tracking",
+                "Bill and EMI reminders",
+                "Printable monthly PDF report",
+                "Hindi and English interface",
+              ],
+            },
+          ],
+        }),
       },
     ],
   }),
@@ -79,7 +126,7 @@ function Landing() {
                 href="#features"
                 className="rounded-lg border border-border bg-card px-5 py-3 text-sm font-semibold hover:bg-accent/10"
               >
-                Learn more
+                Explore Ghar Kharcha features
               </a>
             </div>
           </div>
@@ -114,20 +161,23 @@ function Landing() {
           </div>
         </section>
 
-        <section id="features" className="mt-20 grid gap-5 sm:grid-cols-3">
-          {[
-            ["Salary & savings", "Multiple income sources, monthly balance and savings goals."],
-            ["Udhari", "Track money you gave or borrowed with reminders."],
-            ["Printable bill", "Beautiful PDF monthly report — download or share on WhatsApp."],
-            ["Ration & petrol", "Dedicated tracking for grocery and fuel spending."],
-            ["Family expenses", "Log money given to wife, children and household."],
-            ["Works offline-ish", "Installable on Android & iPhone as a mobile app."],
-          ].map(([title, body]) => (
-            <div key={title} className="rounded-2xl border border-border bg-card p-5 shadow-card">
-              <h3 className="font-semibold">{title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-            </div>
-          ))}
+        <section id="features" className="mt-20">
+          <h2 className="text-2xl font-semibold">Everything a family budget needs</h2>
+          <div className="mt-5 grid gap-5 sm:grid-cols-3">
+            {[
+              ["Salary & savings", "Multiple income sources, monthly balance and savings goals."],
+              ["Udhari", "Track money you gave or borrowed with reminders."],
+              ["Printable bill", "Beautiful PDF monthly report — download or share on WhatsApp."],
+              ["Ration & petrol", "Dedicated tracking for grocery and fuel spending."],
+              ["Family expenses", "Log money given to wife, children and household."],
+              ["Works offline-ish", "Installable on Android & iPhone as a mobile app."],
+            ].map(([title, body]) => (
+              <div key={title} className="rounded-2xl border border-border bg-card p-5 shadow-card">
+                <h3 className="font-semibold">{title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+              </div>
+            ))}
+          </div>
         </section>
       </main>
     </div>

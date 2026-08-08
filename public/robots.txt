@@ -5,6 +5,10 @@ Disallow: /expenses
 Disallow: /categories
 Disallow: /salary
 Disallow: /udhari
+Disallow: /savings
 Disallow: /reminders
 Disallow: /reports
+Disallow: /assistant
 Disallow: /admin
+
+Sitemap: https://ghar-kharcha-guardian.lovable.app/sitemap.xml

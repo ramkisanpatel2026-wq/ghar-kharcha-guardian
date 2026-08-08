@@ -89,24 +89,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting.",
+          "Track salary, expenses, savings, udhari, ration & petrol. Print monthly bills. Built for Indian middle-class families.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Ghar Kharcha Manager — Family Budget & Expense Tracker" },
       {
-        name: "description",
-        content:
-          "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting.",
-      },
-      {
         name: "twitter:description",
         content:
-          "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting.",
+          "Track salary, expenses, savings, udhari, ration & petrol. Print monthly bills. Built for Indian middle-class families.",
       },
-      { name: "description", content: "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting." },
-      { property: "og:description", content: "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting." },
-      { name: "twitter:description", content: "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting." },
+      { property: "og:site_name", content: "Ghar Kharcha Manager" },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dcd2c7a4-1e7a-482e-ab53-bf669a3b4fb1/id-preview-5253a3e3--04767cc5-c202-4a35-8432-4f9c099d342a.lovable.app-1782889393842.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/dcd2c7a4-1e7a-482e-ab53-bf669a3b4fb1/id-preview-5253a3e3--04767cc5-c202-4a35-8432-4f9c099d342a.lovable.app-1782889393842.png" },
     ],
