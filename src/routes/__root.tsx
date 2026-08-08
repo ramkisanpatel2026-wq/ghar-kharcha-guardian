@@ -89,7 +89,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "Family Budget Buddy helps middle-class families manage expenses, salary, savings, and budgeting.",
+          "Track salary, expenses, savings, udhari, ration & petrol. Print monthly bills. Built for Indian middle-class families.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
