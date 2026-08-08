@@ -9,7 +9,22 @@ import { fmtINR } from "@/lib/format";
 import { format, parseISO } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/savings")({
-  head: () => ({ meta: [{ title: "Savings — Ghar Kharcha" }] }),
+  head: () => ({
+    meta: [
+      { title: "Savings — Track Bank, Gold, FD & Cash Savings" },
+      {
+        name: "description",
+        content:
+          "Record what you set aside each month across bank, gold, FD and cash, and see how monthly savings affect your remaining balance.",
+      },
+      { property: "og:title", content: "Savings — Track Bank, Gold, FD & Cash Savings" },
+      {
+        property: "og:description",
+        content:
+          "Log monthly savings by type and keep your family's balance calculation accurate month after month.",
+      },
+    ],
+  }),
   component: SavingsPage,
 });
 

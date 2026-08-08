@@ -26,7 +26,22 @@ import { format, parseISO, isAfter } from "date-fns";
 import { ArrowRight, Pencil, Check, X, PiggyBank } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Ghar Kharcha" }] }),
+  head: () => ({
+    meta: [
+      { title: "Dashboard — Monthly Income, Expenses & Balance" },
+      {
+        name: "description",
+        content:
+          "See this month's income, expenses, savings and remaining balance at a glance, and switch months to review past family budgets.",
+      },
+      { property: "og:title", content: "Dashboard — Monthly Income, Expenses & Balance" },
+      {
+        property: "og:description",
+        content:
+          "Your month-by-month family budget summary: salary, spending, savings and the balance left to spend.",
+      },
+    ],
+  }),
   component: Dashboard,
 });
 
@@ -208,7 +223,7 @@ function Dashboard() {
           {t("dashboard.hello")}
           {d?.name ? `, ${d.name}` : ""}
         </p>
-        <h1 className="text-2xl font-semibold">Ghar Kharcha AI</h1>
+        <h1 className="text-2xl font-semibold">Dashboard</h1>
       </div>
 
       {/* Hero salary card with month selector */}

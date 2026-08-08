@@ -8,7 +8,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { fmtINR, fmtPdfINR, monthRange } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/reports")({
-  head: () => ({ meta: [{ title: "Monthly report — Ghar Kharcha" }] }),
+  head: () => ({
+    meta: [
+      { title: "Monthly Report — Printable Income & Expense Bill" },
+      {
+        name: "description",
+        content:
+          "Generate a printable monthly bill with category totals and every expense line, ready to download as a PDF or share with family.",
+      },
+      { property: "og:title", content: "Monthly Report — Printable Income & Expense Bill" },
+      {
+        property: "og:description",
+        content:
+          "Download a clean PDF of the month's income, category totals and expense details for your household records.",
+      },
+    ],
+  }),
   component: Reports,
 });
 
