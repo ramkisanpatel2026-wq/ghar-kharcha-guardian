@@ -9,12 +9,22 @@ import { LangToggle } from "@/components/LangToggle";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — Ghar Kharcha" },
+      { title: "Sign in — Ghar Kharcha Manager" },
       {
         name: "description",
-        content: "Sign in to Ghar Kharcha Manager to track your family budget.",
+        content:
+          "Sign in or create a free Ghar Kharcha Manager account to track your family salary, expenses, savings and udhari.",
       },
+      { property: "og:title", content: "Sign in — Ghar Kharcha Manager" },
+      {
+        property: "og:description",
+        content:
+          "Sign in or create a free account to track your family salary, expenses, savings and udhari month by month.",
+      },
+      { property: "og:url", content: "https://ghar-kharcha-guardian.lovable.app/auth" },
+      { property: "og:type", content: "website" },
     ],
+    links: [{ rel: "canonical", href: "https://ghar-kharcha-guardian.lovable.app/auth" }],
   }),
   component: AuthPage,
 });

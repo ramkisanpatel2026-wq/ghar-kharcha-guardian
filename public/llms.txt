@@ -1,0 +1,10 @@
+# Ghar Kharcha Manager
+
+> Family budget and expense manager for Indian middle-class households — track salary, expenses, savings, udhari, ration and petrol, and print a monthly bill.
+
+Ghar Kharcha Manager is an installable web app (PWA) in Hindi and English. It records monthly income from multiple sources, category-wise expenses, savings, and money given or borrowed (udhari), and generates a printable monthly PDF report. Personal budgeting screens require a signed-in account.
+
+## Pages
+
+- [Home](/): What the app does, features, and how to get started.
+- [Sign in](/auth): Create an account or sign in to start budgeting.
