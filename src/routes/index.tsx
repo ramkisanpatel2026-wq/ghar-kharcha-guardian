@@ -12,10 +12,57 @@ export const Route = createFileRoute("/")({
         content:
           "Simple, printable monthly budgeting for Indian families. Track salary, ration, petrol, udhari and more — in Hindi or English.",
       },
-      { property: "og:title", content: "Ghar Kharcha Manager" },
+      { property: "og:title", content: "Ghar Kharcha Manager — Family Budget Tracker" },
       {
         property: "og:description",
-        content: "Family budgeting made simple. English & Hindi.",
+        content:
+          "Track salary, expenses, savings, udhari, ration and petrol month by month, then print a clean monthly bill. Hindi & English.",
+      },
+      { property: "og:url", content: "https://ghar-kharcha-guardian.lovable.app/" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [{ rel: "canonical", href: "https://ghar-kharcha-guardian.lovable.app/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "Ghar Kharcha Manager",
+              url: "https://ghar-kharcha-guardian.lovable.app/",
+              logo: "https://ghar-kharcha-guardian.lovable.app/icon-512.png",
+              description:
+                "Family budgeting tool for Indian middle-class households — salary, expenses, savings and udhari tracking.",
+            },
+            {
+              "@type": "WebSite",
+              name: "Ghar Kharcha Manager",
+              url: "https://ghar-kharcha-guardian.lovable.app/",
+              description:
+                "Track salary, expenses, savings, udhari, ration and petrol, and print a monthly bill. Hindi & English.",
+            },
+            {
+              "@type": "SoftwareApplication",
+              name: "Ghar Kharcha Manager",
+              url: "https://ghar-kharcha-guardian.lovable.app/",
+              applicationCategory: "FinanceApplication",
+              operatingSystem: "Web, Android, iOS",
+              description:
+                "Family expense and budget manager with salary tracking, savings, udhari, reminders and printable monthly PDF reports.",
+              featureList: [
+                "Salary and income tracking",
+                "Category-wise expense tracking",
+                "Savings and balance calculation",
+                "Udhari (lending & borrowing) tracking",
+                "Bill and EMI reminders",
+                "Printable monthly PDF report",
+                "Hindi and English interface",
+              ],
+            },
+          ],
+        }),
       },
     ],
   }),
