@@ -137,7 +137,6 @@ function RootComponent() {
   const location = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
-  useEffect(() => {
     registerServiceWorker();
   }, []);
 
