@@ -183,7 +183,7 @@ function Reports() {
       t("reports.breakdown"),
       ...q.data.byCat.map(([c, v]) => `• ${c}: ${fmtINR(v)}`),
     ].join("\n");
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    openExternalUrl(`https://wa.me/?text=${encodeURIComponent(text)}`);
   };
 
   return (
