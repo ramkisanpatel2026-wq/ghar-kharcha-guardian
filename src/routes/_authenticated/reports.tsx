@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Download, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtINR, fmtPdfINR, monthRange } from "@/lib/format";
+import { openExternalUrl } from "@/lib/capacitor-native";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
