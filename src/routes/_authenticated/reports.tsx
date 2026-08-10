@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Download, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtINR, fmtPdfINR, monthRange } from "@/lib/format";
+import { openExternalUrl } from "@/lib/capacitor-native";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({
@@ -183,7 +184,7 @@ function Reports() {
       t("reports.breakdown"),
       ...q.data.byCat.map(([c, v]) => `• ${c}: ${fmtINR(v)}`),
     ].join("\n");
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    openExternalUrl(`https://wa.me/?text=${encodeURIComponent(text)}`);
   };
 
   return (

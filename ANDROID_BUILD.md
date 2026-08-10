@@ -1,17 +1,22 @@
-# Ghar Kharcha AI — Android APK / Play Store Build Guide
+# Ghar Kharcha — Android APK / Play Store Build Guide
 
-Lovable hosts the web app; it cannot compile an APK/AAB (that needs the Android SDK + Gradle).
-This repo is now Capacitor-ready, so you can produce a signed release build on your own machine
-(or in GitHub Actions) in a few minutes.
+This project is fully Capacitor Android-ready. Lovable cannot compile an APK (that needs the
+Android SDK + Gradle), so **no APK file has been produced here** — run the steps below on your
+machine (or in GitHub Actions) to generate `Ghar-Kharcha.apk`.
 
-- **Package name:** `com.gharkharcha.ai`
-- **App name:** Ghar Kharcha AI
+- **App name:** Ghar Kharcha
+- **Application ID:** `com.gharkharcha.app`
+- **Version:** versionName `1.0.0`, versionCode `1`
 - **Config file:** `capacitor.config.ts`
 
-The Android shell loads `https://ghar-kharcha-guardian.lovable.app` because the app is a
-server-rendered TanStack Start app (auth, AI assistant, server functions). Publishing an update
-from Lovable updates the installed app instantly — no Play Store re-submission needed for
-web changes.
+The Android app runs entirely inside its own native Capacitor WebView. It loads
+`https://ghar-kharcha-guardian.lovable.app` because the app is a server-rendered TanStack Start
+app (auth, AI assistant, server functions). `server.allowNavigation` keeps every internal link
+inside the native container — Chrome is never launched for normal navigation. Only explicit
+user actions (e.g. "Share on WhatsApp") open an external app.
+
+Publishing an update from Lovable updates the installed app instantly — no Play re-submission
+needed for web changes.
 
 ---
 
@@ -32,13 +37,32 @@ npx cap add android      # creates the ./android folder (run once)
 npx cap sync android
 ```
 
-## 3. Run on a device / emulator
+`cap add android` reads `capacitor.config.ts`, so the generated project already has
+`applicationId "com.gharkharcha.app"` and app name **Ghar Kharcha**.
+
+## 3. Set the version and SDK levels
+
+In `android/app/build.gradle`:
+
+```gradle
+defaultConfig {
+    applicationId "com.gharkharcha.app"
+    minSdkVersion 23        // Android 6+; covers Android 10–15
+    targetSdkVersion 35     // Android 15 — required by Play
+    versionCode 1
+    versionName "1.0.0"
+}
+```
+
+Bump `versionCode` and `versionName` on every Play upload.
+
+## 4. Run on a device / emulator
 
 ```bash
 npx cap open android     # opens Android Studio
 ```
 
-Press **Run ▶**. To build a debug APK from the CLI instead:
+Press **Run ▶**. Debug APK from the CLI:
 
 ```bash
 cd android
@@ -46,7 +70,7 @@ cd android
 # output: android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## 4. Create a signing key (once)
+## 5. Create a signing key (once)
 
 ```bash
 keytool -genkey -v -keystore ghar-kharcha.keystore \
@@ -94,21 +118,49 @@ buildTypes {
 }
 ```
 
-## 5. Build the release artifacts
+## 6. Build the release artifacts
 
 ```bash
 cd android
-./gradlew bundleRelease   # AAB — required by Google Play
-./gradlew assembleRelease # APK — for direct sideloading
+./gradlew assembleRelease  # signed APK
+./gradlew bundleRelease    # AAB — required by Google Play
 ```
 
 Outputs:
+- `android/app/build/outputs/apk/release/app-release.apk` → rename to `Ghar-Kharcha.apk`
 - `android/app/build/outputs/bundle/release/app-release.aab`
-- `android/app/build/outputs/apk/release/app-release.apk`
 
-## 6. Upload to Google Play
+## 7. App icons and splash
 
-1. Play Console → **Create app** → name "Ghar Kharcha AI", type App, Free.
+Place a 1024×1024 PNG at `resources/icon.png` and a 2732×2732 PNG at `resources/splash.png`
+(brand green `#0F5132`), then:
+
+```bash
+bun add -d @capacitor/assets
+npx capacitor-assets generate --android
+npx cap sync android
+```
+
+The splash screen is configured in `capacitor.config.ts` (`launchAutoHide: false`) and is hidden
+by the app itself once React has mounted — see `src/lib/capacitor-native.ts`.
+
+## 8. What the native layer already handles
+
+Implemented in `src/lib/capacitor-native.ts`, wired from `src/routes/__root.tsx`:
+
+- **Hardware back button** — navigates back inside the app; exits only at the app root.
+- **Status bar** — dark icons over `#0F5132`, not overlaying the WebView (safe-area padding
+  already comes from `viewport-fit=cover`).
+- **Splash screen** — hidden programmatically after mount, so no white flash.
+- **External links** — only opened on an explicit user tap (`openExternalUrl`).
+- **Storage** — the WebView keeps localStorage/IndexedDB and the Lovable Cloud auth session
+  persistent across app restarts.
+- **Offline** — the existing service worker caches shell assets; server-backed screens need
+  connectivity as before.
+
+## 9. Upload to Google Play
+
+1. Play Console → **Create app** → name "Ghar Kharcha", type App, Free.
 2. Upload the `.aab` under **Production → Create new release**.
 3. Complete: Store listing (icon 512×512, feature graphic 1024×500, screenshots),
    Content rating, Data safety, Privacy policy URL, Target audience.
@@ -116,46 +168,11 @@ Outputs:
 
 ### Play policy note
 
-Google rejects apps that are *only* a webview with no added value. This build already includes
-native splash screen and status-bar integration. To strengthen the submission, consider adding:
+Google rejects apps that are *only* a webview with no added value. This build includes native
+splash, status-bar and back-button integration. To strengthen the submission, consider adding
+push notifications for bill reminders:
 
 ```bash
-bun add @capacitor/push-notifications @capacitor/haptics @capacitor/share @capacitor/preferences
+bun add @capacitor/push-notifications @capacitor/haptics @capacitor/preferences
 npx cap sync android
 ```
-
-and wiring push notifications for bill reminders — that is a genuinely native capability and
-makes the listing clearly compliant.
-
-## 7. Versioning for each update
-
-In `android/app/build.gradle` bump both on every Play upload:
-
-```gradle
-versionCode 2
-versionName "1.1.0"
-```
-
-## 8. App icons and splash
-
-Place a 1024×1024 PNG at `resources/icon.png` and a 2732×2732 PNG at `resources/splash.png`, then:
-
-```bash
-bun add -d @capacitor/assets
-npx capacitor-assets generate --android
-```
-
----
-
-## Alternative: Trusted Web Activity (fastest path)
-
-If you want the APK without maintaining an Android project, use Bubblewrap — it wraps the
-PWA in a TWA and passes Play review as a web app:
-
-```bash
-npm i -g @bubblewrap/cli
-bubblewrap init --manifest https://ghar-kharcha-guardian.lovable.app/manifest.webmanifest
-bubblewrap build
-```
-
-This requires a `/.well-known/assetlinks.json` on your domain (Bubblewrap prints the exact file).
