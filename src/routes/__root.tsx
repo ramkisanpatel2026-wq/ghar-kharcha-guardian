@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { registerServiceWorker } from "../lib/register-sw";
+import { initNativeShell } from "../lib/capacitor-native";
 
 function NotFoundComponent() {
   return (
@@ -144,6 +145,7 @@ function RootComponent() {
 
   useEffect(() => {
     registerServiceWorker();
+    return initNativeShell();
   }, []);
 
   useEffect(() => {
