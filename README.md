@@ -85,8 +85,8 @@ Then in GitHub: **Settings → Secrets and variables → Actions → New reposit
 | `ANDROID_KEY_ALIAS` | `gharkharcha` |
 | `ANDROID_KEY_PASSWORD` | your key password |
 
-Re-run the workflow to get a signed release APK. For Google Play you additionally need an `.aab`
-(`./gradlew bundleRelease`) — see `ANDROID_BUILD.md`.
+Re-run the workflow — the release APK and the `.aab` are then signed with your permanent key and
+uploaded as artifacts automatically. Local build details are in `ANDROID_BUILD.md`.
 
 ## Note
 
