@@ -38,11 +38,21 @@ The workflow also runs automatically on every push to `main`.
 
 1. Open the finished workflow run.
 2. Scroll to the bottom to **Artifacts**.
-3. Tap **Ghar-Kharcha-debug-apk** — GitHub downloads a `.zip`.
-4. Open the zip with your phone's Files app and extract `Ghar-Kharcha-debug.apk`.
+3. Tap **Ghar-Kharcha-release-apk** (recommended) or **Ghar-Kharcha-debug-apk** — GitHub
+   downloads a `.zip`.
+4. Open the zip with your phone's Files app and extract the `.apk`.
 
-`Ghar-Kharcha-release-apk` is also produced. It is **unsigned** unless you add signing secrets
-(see below), and an unsigned release APK cannot be installed — use the debug APK for testing.
+Every successful run produces three artifacts:
+
+| Artifact | File | Notes |
+| --- | --- | --- |
+| `Ghar-Kharcha-release-apk` | `Ghar-Kharcha-release.apk` | **Always signed** and installable |
+| `Ghar-Kharcha-debug-apk` | `Ghar-Kharcha-debug.apk` | For testing/debugging |
+| `Ghar-Kharcha-release-aab` | `app-release.aab` | Upload this one to Google Play |
+
+If you have not added signing secrets, the release APK is signed with a temporary keystore
+generated during the build — installable on any phone, but **not** usable for Play Store
+updates. Add the secrets below to sign with your own permanent key.
 
 ## 5. Install the APK on your Android phone
 
