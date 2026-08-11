@@ -2,11 +2,6 @@ name: Android Build (APK)
 
 on:
   workflow_dispatch:
-    inputs:
-      build_release:
-        description: "Also build an unsigned release APK"
-        type: boolean
-        default: true
   push:
     branches: [main]
 
@@ -21,14 +16,14 @@ env:
 
 jobs:
   build:
-    name: Build Android APK
+    name: Build Debug + Signed Release APK
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -58,66 +53,124 @@ jobs:
       - name: Sync Capacitor Android project
         run: npx cap sync android
 
-      - name: Apply app version and SDK levels
+      - name: Apply app id and version
         run: |
           GRADLE=android/app/build.gradle
+          sed -i "s/applicationId \".*\"/applicationId \"${APP_ID}\"/" "$GRADLE"
           sed -i "s/versionCode .*/versionCode ${VERSION_CODE}/" "$GRADLE"
           sed -i "s/versionName .*/versionName \"${VERSION_NAME}\"/" "$GRADLE"
-          sed -i "s/applicationId \".*\"/applicationId \"${APP_ID}\"/" "$GRADLE"
-          echo "--- build.gradle defaultConfig ---"
           sed -n '1,60p' "$GRADLE"
 
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
+      # ---------- Debug APK ----------
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Rename debug APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk Ghar-Kharcha-debug.apk
+      - name: Collect debug APK
+        run: |
+          mkdir -p artifacts
+          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/Ghar-Kharcha-debug.apk
 
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: Ghar-Kharcha-debug-apk
-          path: Ghar-Kharcha-debug.apk
+          path: artifacts/Ghar-Kharcha-debug.apk
           if-no-files-found: error
           retention-days: 30
 
-      # ---- Optional release build ----
-      # Unsigned unless a keystore is provided via repository secrets:
+      # ---------- Release APK (always signed) ----------
+      # Uses your upload keystore when these repository secrets exist:
       #   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
       #   ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
-      - name: Decode signing keystore (optional)
-        id: keystore
-        if: ${{ github.event_name == 'push' || inputs.build_release }}
+      # Otherwise a temporary keystore is generated so the release APK is still
+      # installable (fine for testing, NOT for Google Play updates).
+      - name: Prepare signing keystore
+        id: signing
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        run: |
-          if [ -n "$KEYSTORE_B64" ]; then
-            echo "$KEYSTORE_B64" | base64 -d > android/app/release.keystore
-            echo "signed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "No keystore secret found — building an UNSIGNED release APK."
-            echo "signed=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Build release APK
-        if: ${{ github.event_name == 'push' || inputs.build_release }}
-        working-directory: android
-        env:
-          KEYSTORE_PATH: app/release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: |
+          set -e
+          KS_PATH="$RUNNER_TEMP/release.keystore"
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$KS_PATH"
+            echo "store_pass=$KEYSTORE_PASSWORD" >> "$GITHUB_OUTPUT"
+            echo "key_pass=$KEY_PASSWORD" >> "$GITHUB_OUTPUT"
+            echo "alias=$KEY_ALIAS" >> "$GITHUB_OUTPUT"
+            echo "official=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No ANDROID_KEYSTORE_BASE64 secret found — generating a temporary keystore. Installable, but cannot be used for Play Store updates."
+            keytool -genkeypair -v -keystore "$KS_PATH" -alias gharkharcha \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass gharkharcha -keypass gharkharcha \
+              -dname "CN=Ghar Kharcha, OU=Mobile, O=Ghar Kharcha, L=Pune, S=MH, C=IN"
+            echo "store_pass=gharkharcha" >> "$GITHUB_OUTPUT"
+            echo "key_pass=gharkharcha" >> "$GITHUB_OUTPUT"
+            echo "alias=gharkharcha" >> "$GITHUB_OUTPUT"
+            echo "official=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "keystore=$KS_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Build release APK
+        working-directory: android
+        env:
+          GK_STORE_FILE: ${{ steps.signing.outputs.keystore }}
+          GK_STORE_PASSWORD: ${{ steps.signing.outputs.store_pass }}
+          GK_KEY_ALIAS: ${{ steps.signing.outputs.alias }}
+          GK_KEY_PASSWORD: ${{ steps.signing.outputs.key_pass }}
+        run: |
+          ./gradlew assembleRelease --no-daemon --stacktrace \
+            -Pandroid.injected.signing.store.file="$GK_STORE_FILE" \
+            -Pandroid.injected.signing.store.password="$GK_STORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$GK_KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$GK_KEY_PASSWORD"
+
+      - name: Collect and verify release APK
+        run: |
+          set -e
+          APK=$(find android/app/build/outputs/apk/release -name "*.apk" ! -name "*unsigned*" | head -n 1)
+          if [ -z "$APK" ]; then
+            echo "No signed release APK produced"; exit 1
+          fi
+          mkdir -p artifacts
+          cp "$APK" artifacts/Ghar-Kharcha-release.apk
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n 1)
+          "$BT/apksigner" verify --print-certs artifacts/Ghar-Kharcha-release.apk
 
       - name: Upload release APK artifact
-        if: ${{ github.event_name == 'push' || inputs.build_release }}
         uses: actions/upload-artifact@v4
         with:
           name: Ghar-Kharcha-release-apk
-          path: android/app/build/outputs/apk/release/*.apk
+          path: artifacts/Ghar-Kharcha-release.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      # ---------- Play Store bundle (optional but produced anyway) ----------
+      - name: Build release AAB (for Google Play)
+        working-directory: android
+        continue-on-error: true
+        env:
+          GK_STORE_FILE: ${{ steps.signing.outputs.keystore }}
+          GK_STORE_PASSWORD: ${{ steps.signing.outputs.store_pass }}
+          GK_KEY_ALIAS: ${{ steps.signing.outputs.alias }}
+          GK_KEY_PASSWORD: ${{ steps.signing.outputs.key_pass }}
+        run: |
+          ./gradlew bundleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file="$GK_STORE_FILE" \
+            -Pandroid.injected.signing.store.password="$GK_STORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$GK_KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$GK_KEY_PASSWORD"
+
+      - name: Upload release AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ghar-Kharcha-release-aab
+          path: android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: warn
           retention-days: 30
