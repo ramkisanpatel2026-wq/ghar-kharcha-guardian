@@ -43,9 +43,9 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-
       - name: Install dependencies
         run: npm install --legacy-peer-deps
+
 
       - name: Build web assets
         run: npm run build
