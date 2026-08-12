@@ -19,7 +19,17 @@ export default defineConfig({
         skipWaiting: true,
         runtimeCaching: [
           {
-            urlPattern: ({ request }) => request.mode === "navigate",
+            // Never intercept OAuth callbacks, server functions or API routes:
+            // a cached shell here breaks OAuth state verification.
+            urlPattern: ({ request, url, sameOrigin }) =>
+              request.mode === "navigate" &&
+              !(
+                sameOrigin &&
+                (url.pathname.startsWith("/~oauth") ||
+                  url.pathname.startsWith("/api/") ||
+                  url.pathname.startsWith("/_serverFn"))
+              ),
+
             handler: "NetworkFirst",
             options: {
               cacheName: "html-navigations",
