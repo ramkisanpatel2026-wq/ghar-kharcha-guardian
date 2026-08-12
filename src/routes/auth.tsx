@@ -49,7 +49,7 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "up") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -58,14 +58,45 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        if (!data.session) {
+          toast.success("Account created — check your email to confirm, then sign in.");
+          setMode("in");
+          return;
+        }
         toast.success("Account created");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          if (error.message.toLowerCase().includes("invalid login credentials")) {
+            throw new Error(
+              "Email or password is wrong. If you signed up with Google, use the Google button above — or reset your password to set one.",
+            );
+          }
+          throw error;
+        }
       }
       navigate({ to: "/dashboard", replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const forgotPassword = async () => {
+    if (!email) {
+      toast.error("Enter your email first, then tap Forgot password.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Password reset link sent — check your email.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send reset link");
     } finally {
       setBusy(false);
     }
@@ -83,10 +114,13 @@ function AuthPage() {
       }
       if (result.redirected) return;
       navigate({ to: "/dashboard", replace: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Google sign-in failed");
     } finally {
       setBusy(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background px-5 py-6">
