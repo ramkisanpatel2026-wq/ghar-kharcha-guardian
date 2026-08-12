@@ -179,7 +179,32 @@ function Landing() {
             ))}
           </div>
         </section>
+
+        <section className="mt-16 rounded-2xl border border-border bg-card p-6 text-center shadow-card">
+          <h2 className="text-xl font-semibold">Prefer the Android app?</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+            Ghar Kharcha ka Android version bhi available hai — download page par latest APK,
+            install steps aur release details milengi.
+          </p>
+          <Link
+            to="/download"
+            className="mt-4 inline-flex rounded-lg border border-border bg-background px-5 py-3 text-sm font-semibold hover:bg-accent/10"
+          >
+            Go to Android download page
+          </Link>
+        </section>
       </main>
+
+      <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">
+        <Link to="/download" className="text-primary hover:underline">
+          Download Android app
+        </Link>
+        <span className="px-2">·</span>
+        <Link to="/auth" className="text-primary hover:underline">
+          Sign in
+        </Link>
+      </footer>
+
     </div>
   );
 }
