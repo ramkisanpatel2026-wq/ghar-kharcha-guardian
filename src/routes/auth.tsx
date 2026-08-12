@@ -206,6 +206,21 @@ function AuthPage() {
           </button>
         </form>
 
+        {mode === "in" && (
+          <p className="mt-3 text-center text-xs">
+            <button
+              type="button"
+              onClick={forgotPassword}
+              disabled={busy}
+              className="font-medium text-primary hover:underline disabled:opacity-60"
+            >
+              Forgot password?
+            </button>
+          </p>
+        )}
+
+
+
         <p className="mt-4 text-center text-xs text-muted-foreground">
           {mode === "in" ? t("auth.noAccount") : t("auth.haveAccount")}{" "}
           <button
