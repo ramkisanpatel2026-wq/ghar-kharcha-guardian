@@ -6,7 +6,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   APP_ID: com.gharkharcha.app
@@ -174,3 +174,20 @@ jobs:
           path: android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: warn
           retention-days: 30
+
+      # ---------- Publish a downloadable GitHub Release ----------
+      - name: Publish release with APK
+        if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION_NAME }}-${{ github.run_number }}
+          name: Ghar Kharcha ${{ env.VERSION_NAME }} (build ${{ github.run_number }})
+          body: |
+            Ghar Kharcha Android build.
+
+            - Version: ${{ env.VERSION_NAME }} (code ${{ env.VERSION_CODE }})
+            - Package: ${{ env.APP_ID }}
+            - Commit: ${{ github.sha }}
+          files: |
+            artifacts/Ghar-Kharcha-release.apk
+            artifacts/Ghar-Kharcha-debug.apk
