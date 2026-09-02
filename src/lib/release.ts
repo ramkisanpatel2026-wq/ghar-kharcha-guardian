@@ -14,7 +14,8 @@ export const APP_VERSION = "1.0.0";
 export const APP_VERSION_CODE = 1;
 
 export const GITHUB_REPO: string =
-  (import.meta.env.VITE_GITHUB_REPO as string | undefined)?.trim() || "";
+  (import.meta.env.VITE_GITHUB_REPO as string | undefined)?.trim() ||
+  "ramkisanpatel2026-wq/ghar-kharcha-guardian";
 
 export type LatestRelease = {
   version: string;
