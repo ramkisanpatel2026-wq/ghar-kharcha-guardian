@@ -41,7 +41,12 @@ export async function fetchLatestRelease(): Promise<LatestRelease | null> {
     html_url?: string;
     assets?: { name: string; browser_download_url: string; size: number }[];
   };
-  const apk = (data.assets ?? []).find((a) => a.name.toLowerCase().endsWith(".apk"));
+  const apks = (data.assets ?? []).filter((a) => a.name.toLowerCase().endsWith(".apk"));
+  // Always prefer the signed release build over the debug build.
+  const apk =
+    apks.find((a) => a.name.toLowerCase().includes("release")) ??
+    apks.find((a) => !a.name.toLowerCase().includes("debug")) ??
+    apks[0];
   if (!apk) return null;
   return {
     version: (data.tag_name ?? data.name ?? APP_VERSION).replace(/^v/, ""),
