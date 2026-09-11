@@ -79,29 +79,39 @@ function Dashboard() {
   const q = useQuery({
     queryKey: ["dashboard", monthISO],
     queryFn: async () => {
+      // Scope every query to the signed-in user: admins can read all rows via
+      // RLS, so without this filter an admin's dashboard would mix in other
+      // users' data (and maybeSingle would fail on duplicate salary rows).
+      const { data: userRes, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userRes.user) throw userErr ?? new Error("Not signed in");
+      const uid = userRes.user.id;
       const [inc, exp, cats, udh, rem, prof, sav] = await Promise.all([
         supabase
           .from("salary_entries")
           .select("id, amount, source, salary_key")
+          .eq("user_id", uid)
           .eq("salary_key", salaryKey)
           .maybeSingle(),
         supabase
           .from("expenses")
           .select("amount, category_id, expense_date")
+          .eq("user_id", uid)
           .gte("expense_date", startISO)
           .lt("expense_date", endISO),
-        supabase.from("categories").select("id, name"),
-        supabase.from("udhari").select("direction, amount").eq("status", "unpaid"),
+        supabase.from("categories").select("id, name").eq("user_id", uid),
+        supabase.from("udhari").select("direction, amount").eq("user_id", uid).eq("status", "unpaid"),
         supabase
           .from("reminders")
           .select("id, title, remind_at, kind, is_done")
+          .eq("user_id", uid)
           .eq("is_done", false)
           .order("remind_at")
           .limit(5),
-        supabase.from("profiles").select("full_name").maybeSingle(),
+        supabase.from("profiles").select("full_name").eq("user_id", uid).maybeSingle(),
         supabase
           .from("savings")
           .select("amount, saved_on")
+          .eq("user_id", uid)
           .gte("saved_on", startISO)
           .lt("saved_on", endISO),
       ]);
