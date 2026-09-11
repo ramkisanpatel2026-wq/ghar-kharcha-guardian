@@ -1,18 +1,20 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 /**
- * Ghar Kharcha — Android (Capacitor) configuration.
+ * Ghar Kharcha Manager — Android (Capacitor) configuration.
  *
  * The app is a TanStack Start SSR application (server functions, /api routes,
  * Lovable Cloud auth), so the Android shell loads the deployed site INSIDE the
  * native Capacitor WebView. It never hands navigation to Chrome or any external
  * browser: `allowNavigation` keeps every in-app URL inside the WebView.
  *
- * `webDir` points at the client build output so `npx cap sync` has assets to copy.
+ * `webDir` points at the client build output so `npx cap sync` has assets to
+ * copy — that bundle also provides `offline.html`, shown by `server.errorPath`
+ * when the device has no connection at launch.
  */
 const config: CapacitorConfig = {
-  appId: "com.gharkharcha.app",
-  appName: "Ghar Kharcha",
+  appId: "com.gharkharcha.manager",
+  appName: "Ghar Kharcha Manager",
   webDir: "dist/client",
   android: {
     allowMixedContent: false,
@@ -25,6 +27,8 @@ const config: CapacitorConfig = {
     hostname: "ghar-kharcha-guardian.lovable.app",
     cleartext: false,
     androidScheme: "https",
+    // Offline / network-failure fallback bundled inside the APK.
+    errorPath: "offline.html",
     // Any URL matching these patterns is loaded in-app; everything else is
     // only opened when the user explicitly taps an external link.
     allowNavigation: [

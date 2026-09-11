@@ -10,8 +10,8 @@
  * release build to that repository's GitHub Releases, and the download page
  * resolves the latest APK from it at runtime.
  */
-export const APP_VERSION = "1.0.0";
-export const APP_VERSION_CODE = 1;
+export const APP_VERSION = "1.0.2";
+export const APP_VERSION_CODE = 3;
 
 export const GITHUB_REPO: string =
   (import.meta.env.VITE_GITHUB_REPO as string | undefined)?.trim() ||
