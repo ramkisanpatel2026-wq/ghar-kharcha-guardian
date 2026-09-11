@@ -3,7 +3,7 @@ import { initReactI18next } from "react-i18next";
 
 const en = {
   app: {
-    name: "Ghar Kharcha",
+    name: "Ghar Kharcha Manager",
     tagline: "Manage your family's money with confidence.",
   },
   nav: {
