@@ -9,10 +9,10 @@ permissions:
   contents: write
 
 env:
-  APP_ID: com.gharkharcha.app
-  APP_NAME: Ghar Kharcha
-  VERSION_NAME: 1.0.1
-  VERSION_CODE: 2
+  APP_ID: com.gharkharcha.manager
+  APP_NAME: Ghar Kharcha Manager
+  VERSION_NAME: 1.0.2
+  VERSION_CODE: 3
 
 jobs:
   build:
@@ -50,8 +50,45 @@ jobs:
             npx cap add android
           fi
 
+      - name: Generate app icon and splash screen
+        run: npx --yes @capacitor/assets@3 generate --android --iconBackgroundColor '#0F5132' --splashBackgroundColor '#0F5132'
+
       - name: Sync Capacitor Android project
         run: npx cap sync android
+
+      - name: Set app display name
+        run: |
+          STRINGS=android/app/src/main/res/values/strings.xml
+          python3 - "$STRINGS" <<'PY'
+          import re, sys
+          path = sys.argv[1]
+          xml = open(path).read()
+          for key in ("app_name", "title_activity_main"):
+              xml = re.sub(
+                  rf'(<string name="{key}">)(.*?)(</string>)',
+                  r'\1Ghar Kharcha Manager\3',
+                  xml,
+              )
+          open(path, "w").write(xml)
+          print(xml)
+          PY
+
+      - name: Keep only the INTERNET permission
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          python3 - "$MANIFEST" <<'PY'
+          import re, sys
+          path = sys.argv[1]
+          xml = open(path).read()
+          # Drop every declared permission, then re-add INTERNET only.
+          xml = re.sub(r'\s*<uses-permission[^>]*/>', '', xml)
+          xml = xml.replace(
+              '</manifest>',
+              '\n    <uses-permission android:name="android.permission.INTERNET" />\n</manifest>',
+          )
+          open(path, "w").write(xml)
+          print(xml)
+          PY
 
       - name: Apply app id and version
         run: |
