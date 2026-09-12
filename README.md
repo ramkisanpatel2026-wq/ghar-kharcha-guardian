@@ -4,7 +4,7 @@ No Android Studio, no laptop needed. GitHub builds the APK for you in the cloud 
 downloadable file.
 
 - **App name:** Ghar Kharcha
-- **Package ID:** `com.gharkharcha.app`
+- **Package ID:** `com.gharkharcha.manager`
 - **Version:** 1.0.0 (versionCode 1)
 - **Type:** real native Android app (Capacitor WebView container) — not a PWA shortcut, never opens Chrome.
 

@@ -5,7 +5,7 @@ Android SDK + Gradle), so **no APK file has been produced here** — run the ste
 machine (or in GitHub Actions) to generate `Ghar-Kharcha.apk`.
 
 - **App name:** Ghar Kharcha
-- **Application ID:** `com.gharkharcha.app`
+- **Application ID:** `com.gharkharcha.manager`
 - **Version:** versionName `1.0.0`, versionCode `1`
 - **Config file:** `capacitor.config.ts`
 
@@ -38,7 +38,7 @@ npx cap sync android
 ```
 
 `cap add android` reads `capacitor.config.ts`, so the generated project already has
-`applicationId "com.gharkharcha.app"` and app name **Ghar Kharcha**.
+`applicationId "com.gharkharcha.manager"` and app name **Ghar Kharcha**.
 
 ## 3. Set the version and SDK levels
 
@@ -46,7 +46,7 @@ In `android/app/build.gradle`:
 
 ```gradle
 defaultConfig {
-    applicationId "com.gharkharcha.app"
+    applicationId "com.gharkharcha.manager"
     minSdkVersion 23        // Android 6+; covers Android 10–15
     targetSdkVersion 35     // Android 15 — required by Play
     versionCode 1
