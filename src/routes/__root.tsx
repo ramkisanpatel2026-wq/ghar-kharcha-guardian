@@ -91,8 +91,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { name: "apple-mobile-web-app-title", content: "Ghar Kharcha" },
-      { name: "application-name", content: "Ghar Kharcha" },
+      { name: "apple-mobile-web-app-title", content: "Ghar Kharcha Manager" },
+      { name: "application-name", content: "Ghar Kharcha Manager" },
       { property: "og:title", content: "Ghar Kharcha Manager — Family Budget & Expense Tracker" },
       {
         property: "og:description",

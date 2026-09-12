@@ -208,7 +208,7 @@ function DownloadPage() {
             </div>
             <div>
               <dt className="text-muted-foreground">Package</dt>
-              <dd className="font-medium">com.gharkharcha.app</dd>
+              <dd className="font-medium">com.gharkharcha.manager</dd>
             </div>
           </dl>
           {release?.notes ? (
