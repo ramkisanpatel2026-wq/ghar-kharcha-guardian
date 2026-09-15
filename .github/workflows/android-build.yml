@@ -35,8 +35,9 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      # The ubuntu-latest runner image already ships the Android SDK
+      # (cmdline-tools, platform-tools, build-tools) with ANDROID_HOME set,
+      # so no separate setup-android step is needed.
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps
