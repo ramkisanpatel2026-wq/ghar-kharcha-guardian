@@ -71,6 +71,17 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
+      # Gradle distribution download can hit transient network resets —
+      # retry a few times so one flaky connection doesn't fail the build.
+      - name: Warm up Gradle (with retries)
+        working-directory: android
+        run: |
+          for i in 1 2 3 4 5; do
+            ./gradlew --version && break
+            echo "Gradle download attempt $i failed — retrying in 15s..."
+            sleep 15
+          done
+
       # ---------- Debug APK ----------
       - name: Build debug APK
         working-directory: android
