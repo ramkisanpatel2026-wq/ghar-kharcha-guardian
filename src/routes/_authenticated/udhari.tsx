@@ -26,6 +26,7 @@ function Udhari() {
         await supabase
           .from("udhari")
           .select("*")
+          .eq("user_id", await currentUserId())
           .order("status")
           .order("due_date", { ascending: true, nullsFirst: false })
       ).data ?? [],
@@ -50,7 +51,8 @@ function Udhari() {
       const { error } = await supabase
         .from("udhari")
         .update({ status: r.status === "paid" ? "unpaid" : "paid" })
-        .eq("id", r.id);
+        .eq("id", r.id)
+        .eq("user_id", await currentUserId());
       if (error) throw error;
     },
     onSuccess: () => {
@@ -61,7 +63,7 @@ function Udhari() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("udhari").delete().eq("id", id);
+      const { error } = await supabase.from("udhari").delete().eq("id", id).eq("user_id", await currentUserId());
       if (error) throw error;
     },
     onSuccess: () => {

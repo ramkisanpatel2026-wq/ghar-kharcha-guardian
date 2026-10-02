@@ -26,7 +26,7 @@ function Expenses() {
 
   const cats = useQuery({
     queryKey: ["categories"],
-    queryFn: async () => (await supabase.from("categories").select("*").order("name")).data ?? [],
+    queryFn: async () => (await supabase.from("categories").select("*").eq("user_id", await currentUserId()).order("name")).data ?? [],
   });
 
   const list = useQuery({
@@ -36,6 +36,7 @@ function Expenses() {
         await supabase
           .from("expenses")
           .select("id, amount, expense_date, note, payee, category_id")
+          .eq("user_id", await currentUserId())
           .order("expense_date", { ascending: false })
           .limit(200)
       ).data ?? [],
@@ -60,7 +61,7 @@ function Expenses() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("expenses").delete().eq("id", id);
+      const { error } = await supabase.from("expenses").delete().eq("id", id).eq("user_id", await currentUserId());
       if (error) throw error;
     },
     onSuccess: () => {

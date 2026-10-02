@@ -1,3 +1,4 @@
+import { currentUserId } from "@/lib/auth";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -35,6 +36,7 @@ function Salary() {
       const { data, error } = await supabase
         .from("salary_entries")
         .select("*")
+        .eq("user_id", await currentUserId())
         .order("month", { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -63,7 +65,7 @@ function Salary() {
   }, [selectedSalary]);
 
   const thisMonth = (list.data ?? [])
-    .filter((r) => r.month === monthKey())
+    .filter((r) => r.salary_key === salaryKeyFromMonthISO(monthKey()) || r.month === monthKey())
     .reduce((s, r) => s + normalizeSalaryAmount(r.amount), 0);
 
   const add = async (e: React.FormEvent) => {
@@ -114,7 +116,7 @@ function Salary() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("salary_entries").delete().eq("id", id);
+      const { error } = await supabase.from("salary_entries").delete().eq("id", id).eq("user_id", await currentUserId());
       if (error) throw error;
     },
     onSuccess: () => {
