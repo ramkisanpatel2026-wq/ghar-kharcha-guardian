@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { LangToggle } from "@/components/LangToggle";
+import { isNativeApp } from "@/lib/capacitor-native";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
