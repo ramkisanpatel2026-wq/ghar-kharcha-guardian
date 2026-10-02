@@ -103,6 +103,17 @@ function AuthPage() {
   };
 
   const google = async () => {
+    if (busy) return; // never start two sign-in flows at once
+    if (isNativeApp()) {
+      // Google blocks its sign-in page inside app windows, so Android sends it to
+      // Chrome. Chrome cannot see the security check started inside the app, which
+      // caused "State verification failed". Stop before that broken hand-off.
+      toast.error(
+        "Google login abhi Android app ke andar kaam nahi karta. App me email + password se login karein (password na ho to 'Forgot password?' dabakar set karein), ya Chrome me website kholkar Google se login karein.",
+        { duration: 9000 },
+      );
+      return;
+    }
     setBusy(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
