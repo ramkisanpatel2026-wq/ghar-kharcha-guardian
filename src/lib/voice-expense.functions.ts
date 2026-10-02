@@ -24,7 +24,10 @@ export const transcribeAndParseExpense = createServerFn({ method: "POST" })
     const { supabase } = context;
 
     // Load user's categories to guide category matching
-    const { data: cats } = await supabase.from("categories").select("id, name");
+    const { data: cats } = await supabase
+      .from("categories")
+      .select("id, name")
+      .eq("user_id", context.userId);
     const categoryNames = (cats ?? []).map((c) => c.name);
 
     // 1) Speech-to-text via Lovable AI
