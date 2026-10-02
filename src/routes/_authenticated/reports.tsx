@@ -1,3 +1,4 @@
+import { currentUserId } from "@/lib/auth";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -41,17 +42,33 @@ function Reports() {
   const q = useQuery({
     queryKey: ["report", startISO],
     queryFn: async () => {
-      const [inc, exp, cats, prof] = await Promise.all([
-        supabase.from("salary_entries").select("source, amount").eq("month", startISO),
+      const uid = await currentUserId();
+      const [inc, exp, cats, prof, sav] = await Promise.all([
+        supabase
+          .from("salary_entries")
+          .select("source, amount")
+          .eq("user_id", uid)
+          .eq("month", startISO),
         supabase
           .from("expenses")
           .select("amount, expense_date, note, payee, category_id")
+          .eq("user_id", uid)
           .gte("expense_date", startISO)
           .lt("expense_date", endISO)
           .order("expense_date"),
-        supabase.from("categories").select("id, name"),
-        supabase.from("profiles").select("full_name").maybeSingle(),
+        supabase.from("categories").select("id, name").eq("user_id", uid),
+        supabase.from("profiles").select("full_name").eq("user_id", uid).maybeSingle(),
+        supabase
+          .from("savings")
+          .select("amount")
+          .eq("user_id", uid)
+          .gte("saved_on", startISO)
+          .lt("saved_on", endISO),
       ]);
+      if (inc.error) throw inc.error;
+      if (exp.error) throw exp.error;
+      if (cats.error) throw cats.error;
+      if (sav.error) throw sav.error;
       const catMap = new Map((cats.data ?? []).map((c) => [c.id, c.name]));
       const rows = (exp.data ?? []).map((r) => ({
         date: r.expense_date,
@@ -62,6 +79,9 @@ function Reports() {
       }));
       const totalExp = rows.reduce((s, r) => s + r.amount, 0);
       const totalInc = (inc.data ?? []).reduce((s, r) => s + Number(r.amount), 0);
+      const totalSav = (sav.data ?? []).reduce((s, r) => s + Number(r.amount), 0);
+      // Same formula as the dashboard: Balance = Income - Expenses - Savings.
+      const balance = Math.round((totalInc - totalExp - totalSav) * 100) / 100;
       const byCat = new Map<string, number>();
       rows.forEach((r) => byCat.set(r.category, (byCat.get(r.category) ?? 0) + r.amount));
       return {
@@ -69,6 +89,8 @@ function Reports() {
         income: inc.data ?? [],
         totalExp,
         totalInc,
+        totalSav,
+        balance,
         byCat: [...byCat.entries()].sort((a, b) => b[1] - a[1]),
         name: prof.data?.full_name ?? "",
       };
@@ -107,7 +129,9 @@ function Reports() {
       y += 7;
       doc.setFontSize(13);
       doc.setFont("helvetica", "bold");
-      doc.text(`Balance: ${fmtPdfINR(q.data.totalInc - q.data.totalExp)}`, 14, y);
+      doc.text(`Savings: ${fmtPdfINR(q.data.totalSav)}`, 14, y);
+      y += 6;
+      doc.text(`Balance: ${fmtPdfINR(q.data.balance)}`, 14, y);
       doc.setFont("helvetica", "normal");
       y += 10;
 
@@ -174,7 +198,7 @@ function Reports() {
 
   const share = () => {
     if (!q.data) return;
-    const bal = q.data.totalInc - q.data.totalExp;
+    const bal = q.data.balance;
     const text = [
       `*Ghar Kharcha — ${label}*`,
       `${t("reports.totalIncome")}: ${fmtINR(q.data.totalInc)}`,
@@ -222,7 +246,7 @@ function Reports() {
         <Stat label={t("reports.totalExpense")} value={fmtINR(q.data?.totalExp)} tone="warning" />
         <Stat
           label={t("reports.balance")}
-          value={fmtINR((q.data?.totalInc ?? 0) - (q.data?.totalExp ?? 0))}
+          value={fmtINR(q.data?.balance ?? 0)}
           tone="primary"
         />
       </div>

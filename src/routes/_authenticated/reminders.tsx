@@ -1,3 +1,4 @@
+import { currentUserId } from "@/lib/auth";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -31,6 +32,7 @@ function Reminders() {
         await supabase
           .from("reminders")
           .select("*")
+          .eq("user_id", await currentUserId())
           .order("is_done")
           .order("remind_at", { ascending: true })
       ).data ?? [],
@@ -65,7 +67,8 @@ function Reminders() {
       const { error } = await supabase
         .from("reminders")
         .update({ is_done: !r.done })
-        .eq("id", r.id);
+        .eq("id", r.id)
+        .eq("user_id", await currentUserId());
       if (error) throw error;
     },
     onSuccess: () => {
@@ -76,7 +79,7 @@ function Reminders() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("reminders").delete().eq("id", id);
+      const { error } = await supabase.from("reminders").delete().eq("id", id).eq("user_id", await currentUserId());
       if (error) throw error;
     },
     onSuccess: () => {

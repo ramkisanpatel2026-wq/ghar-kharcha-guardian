@@ -22,3 +22,14 @@ export function useUser() {
   }, []);
   return { user, loading };
 }
+
+/**
+ * Signed-in user's id. Every personal-data query must filter by this:
+ * admins can read all rows through database rules, so an unscoped query on a
+ * personal page would mix other families' records into the admin's own view.
+ */
+export async function currentUserId(): Promise<string> {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error("Please sign in again.");
+  return data.user.id;
+}

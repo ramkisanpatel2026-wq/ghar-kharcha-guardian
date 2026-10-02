@@ -1,3 +1,4 @@
+import { currentUserId } from "@/lib/auth";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -22,7 +23,7 @@ function Categories() {
 
   const cats = useQuery({
     queryKey: ["categories"],
-    queryFn: async () => (await supabase.from("categories").select("*").order("name")).data ?? [],
+    queryFn: async () => (await supabase.from("categories").select("*").eq("user_id", await currentUserId()).order("name")).data ?? [],
   });
 
   const usage = useQuery({
@@ -31,6 +32,7 @@ function Categories() {
       const { data } = await supabase
         .from("expenses")
         .select("category_id, amount")
+        .eq("user_id", await currentUserId())
         .gte("expense_date", startISO)
         .lt("expense_date", endISO);
       const m = new Map<string, number>();
@@ -67,7 +69,7 @@ function Categories() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("categories").delete().eq("id", id);
+      const { error } = await supabase.from("categories").delete().eq("id", id).eq("user_id", await currentUserId());
       if (error) throw error;
     },
     onSuccess: () => {

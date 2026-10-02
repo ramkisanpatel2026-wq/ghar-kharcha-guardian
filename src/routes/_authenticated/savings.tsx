@@ -1,3 +1,4 @@
+import { currentUserId } from "@/lib/auth";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -52,16 +53,18 @@ function SavingsPage() {
   const list = useQuery({
     queryKey: ["savings"],
     queryFn: async () =>
-      (await supabase.from("savings").select("*").order("saved_on", { ascending: false })).data ??
+      (await supabase.from("savings").select("*").eq("user_id", await currentUserId()).order("saved_on", { ascending: false })).data ??
       [],
   });
 
   const total = (list.data ?? []).reduce((s, r) => s + Number(r.amount), 0);
   const monthStart = new Date();
   monthStart.setDate(1);
-  const monthISO = monthStart.toISOString().slice(0, 10);
+  const monthISO = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, "0")}-01`;
+  const nextMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1);
+  const nextMonthISO = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}-01`;
   const thisMonth = (list.data ?? [])
-    .filter((r) => r.saved_on >= monthISO)
+    .filter((r) => r.saved_on >= monthISO && r.saved_on < nextMonthISO)
     .reduce((s, r) => s + Number(r.amount), 0);
 
   const add = async (e: React.FormEvent) => {
@@ -91,7 +94,7 @@ function SavingsPage() {
 
   const del = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("savings").delete().eq("id", id);
+      const { error } = await supabase.from("savings").delete().eq("id", id).eq("user_id", await currentUserId());
       if (error) throw error;
     },
     onSuccess: () => {
