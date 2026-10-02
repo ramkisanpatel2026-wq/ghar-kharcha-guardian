@@ -36,11 +36,12 @@ export const askAssistant = createServerFn({ method: "POST" })
       supabase
         .from("expenses")
         .select("amount, category_id, expense_date, note")
+        .eq("user_id", context.userId)
         .gte("expense_date", startISO)
         .lt("expense_date", endISO),
-      supabase.from("categories").select("id, name, monthly_budget"),
-      supabase.from("salary_entries").select("amount, source").eq("month", startISO),
-      supabase.from("udhari").select("direction, amount, person_name, status").eq("status", "unpaid"),
+      supabase.from("categories").select("id, name, monthly_budget").eq("user_id", context.userId),
+      supabase.from("salary_entries").select("amount, source").eq("user_id", context.userId).eq("month", startISO),
+      supabase.from("udhari").select("direction, amount, person_name, status").eq("user_id", context.userId).eq("status", "unpaid"),
     ]);
 
     const categories = catRes.data ?? [];
