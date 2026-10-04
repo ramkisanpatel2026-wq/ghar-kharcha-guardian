@@ -8,6 +8,13 @@
       "when": 1790913819009,
       "tag": "0000_admin_read_only_owner_writes",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791125634679,
+      "tag": "0001_native_auth_handoff",
+      "breakpoints": true
     }
   ]
 }
