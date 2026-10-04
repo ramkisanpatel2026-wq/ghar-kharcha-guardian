@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { createNativeHandoff } from "@/lib/native-auth.functions";
 
-export const Route = createFileRoute("/auth/native")({
+export const Route = createFileRoute("/auth_/native")({
   ssr: false,
   head: () => ({
     meta: [

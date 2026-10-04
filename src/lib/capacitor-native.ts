@@ -58,6 +58,24 @@ export function initNativeShell(): Cleanup {
       cleanups.push(() => {
         void handle.remove();
       });
+
+      const urlHandle = await App.addListener("appUrlOpen", ({ url }) => {
+        void (async () => {
+          const [{ handleNativeCallback }, { toast }] = await Promise.all([
+            import("./native-google"),
+            import("sonner"),
+          ]);
+          try {
+            await handleNativeCallback(url);
+            if (url.includes("code=")) window.location.replace("/dashboard");
+          } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Google login failed");
+          }
+        })();
+      });
+      cleanups.push(() => {
+        void urlHandle.remove();
+      });
     } catch {
       /* plugins missing (web build) — no-op */
     }
