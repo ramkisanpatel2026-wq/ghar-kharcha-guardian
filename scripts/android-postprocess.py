@@ -37,7 +37,28 @@ def only_internet_permission() -> None:
     print(xml)
 
 
+def add_auth_deeplink() -> None:
+    """Lets Chrome hand the one-time Google login code back to the app."""
+    xml = open(MANIFEST, encoding="utf-8").read()
+    if "auth-callback" in xml:
+        return
+    flt = (
+        '\n            <intent-filter>\n'
+        '                <action android:name="android.intent.action.VIEW" />\n'
+        '                <category android:name="android.intent.category.DEFAULT" />\n'
+        '                <category android:name="android.intent.category.BROWSABLE" />\n'
+        '                <data android:scheme="com.gharkharcha.manager" android:host="auth-callback" />\n'
+        '            </intent-filter>\n        </activity>'
+    )
+    xml = xml.replace("</activity>", flt, 1)
+    if 'android:launchMode="singleTask"' not in xml:
+        xml = re.sub(r'android:launchMode="\w+"', 'android:launchMode="singleTask"', xml, count=1)
+    open(MANIFEST, "w", encoding="utf-8").write(xml)
+    print(xml)
+
+
 if __name__ == "__main__":
     set_app_name()
     only_internet_permission()
+    add_auth_deeplink()
     sys.exit(0)

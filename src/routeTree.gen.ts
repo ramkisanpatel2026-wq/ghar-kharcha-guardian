@@ -15,6 +15,7 @@ import { Route as DownloadRouteImport } from './routes/download'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthNativeRouteImport } from './routes/auth_.native'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as AuthenticatedUdhariRouteImport } from './routes/_authenticated/udhari'
 import { Route as AuthenticatedSavingsRouteImport } from './routes/_authenticated/savings'
@@ -54,6 +55,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthNativeRoute = AuthNativeRouteImport.update({
+  id: '/auth_/native',
+  path: '/auth/native',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTtsRoute = ApiTtsRouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/savings': typeof AuthenticatedSavingsRoute
   '/udhari': typeof AuthenticatedUdhariRoute
   '/api/tts': typeof ApiTtsRoute
+  '/auth/native': typeof AuthNativeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/savings': typeof AuthenticatedSavingsRoute
   '/udhari': typeof AuthenticatedUdhariRoute
   '/api/tts': typeof ApiTtsRoute
+  '/auth/native': typeof AuthNativeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -167,6 +175,7 @@ export interface FileRoutesById {
   '/_authenticated/savings': typeof AuthenticatedSavingsRoute
   '/_authenticated/udhari': typeof AuthenticatedUdhariRoute
   '/api/tts': typeof ApiTtsRoute
+  '/auth_/native': typeof AuthNativeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/savings'
     | '/udhari'
     | '/api/tts'
+    | '/auth/native'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
     | '/savings'
     | '/udhari'
     | '/api/tts'
+    | '/auth/native'
   id:
     | '__root__'
     | '/'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/_authenticated/savings'
     | '/_authenticated/udhari'
     | '/api/tts'
+    | '/auth_/native'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiTtsRoute: typeof ApiTtsRoute
+  AuthNativeRoute: typeof AuthNativeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -278,6 +291,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth_/native': {
+      id: '/auth_/native'
+      path: '/auth/native'
+      fullPath: '/auth/native'
+      preLoaderRoute: typeof AuthNativeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tts': {
@@ -397,6 +417,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiTtsRoute: ApiTtsRoute,
+  AuthNativeRoute: AuthNativeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

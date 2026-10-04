@@ -91,6 +91,27 @@ export type Database = {
           },
         ]
       }
+      native_auth_handoff: {
+        Row: {
+          challenge: string
+          created_at: string
+          id: string
+          refresh_token: string
+        }
+        Insert: {
+          challenge: string
+          created_at?: string
+          id?: string
+          refresh_token: string
+        }
+        Update: {
+          challenge?: string
+          created_at?: string
+          id?: string
+          refresh_token?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
