@@ -59,23 +59,34 @@ export function initNativeShell(): Cleanup {
         void handle.remove();
       });
 
+      const finishLogin = async (url: string | undefined) => {
+        const [{ handleNativeCallback, isNativeAuthCallback }, { toast }] = await Promise.all([
+          import("./native-google"),
+          import("sonner"),
+        ]);
+        if (!isNativeAuthCallback(url)) return;
+        try {
+          if (await handleNativeCallback(url)) window.location.replace("/dashboard");
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : "Google login failed");
+        }
+      };
+
       const urlHandle = await App.addListener("appUrlOpen", ({ url }) => {
-        void (async () => {
-          const [{ handleNativeCallback }, { toast }] = await Promise.all([
-            import("./native-google"),
-            import("sonner"),
-          ]);
-          try {
-            await handleNativeCallback(url);
-            if (url.includes("code=")) window.location.replace("/dashboard");
-          } catch (e) {
-            toast.error(e instanceof Error ? e.message : "Google login failed");
-          }
-        })();
+        void finishLogin(url);
       });
       cleanups.push(() => {
         void urlHandle.remove();
       });
+
+      // Cold start: Android may have killed the app while Chrome was open, so
+      // the callback arrives as the launch URL instead of an appUrlOpen event.
+      try {
+        const launch = await App.getLaunchUrl();
+        if (launch?.url) void finishLogin(launch.url);
+      } catch {
+        /* ignore */
+      }
     } catch {
       /* plugins missing (web build) — no-op */
     }
