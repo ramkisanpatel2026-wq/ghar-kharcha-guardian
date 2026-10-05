@@ -23,6 +23,22 @@ export const Route = createFileRoute("/auth_/native")({
 const APP = "com.gharkharcha.manager://auth-callback";
 const CH = "gk_native_challenge";
 
+/**
+ * Forget the session in THIS Chrome tab only, without calling the server.
+ * supabase.auth.signOut({ scope: "local" }) still hits /logout and revokes the
+ * session server-side — which killed the refresh token handed to the app.
+ */
+function dropLocalSession() {
+  try {
+    void supabase.auth.stopAutoRefresh();
+  } catch {
+    /* ignore */
+  }
+  Object.keys(localStorage)
+    .filter((k) => /^sb-.+-auth-token$/.test(k))
+    .forEach((k) => localStorage.removeItem(k));
+}
+
 function NativeAuth() {
   const [msg, setMsg] = useState("Google login khul raha hai…");
   const [back, setBack] = useState<string | null>(null);
@@ -36,6 +52,7 @@ function NativeAuth() {
       if (q) sessionStorage.setItem(CH, q);
       const challenge = q ?? sessionStorage.getItem(CH);
       const fail = (e: string) => {
+        console.warn("[auth/native] failed:", e);
         const u = `${APP}?error=${encodeURIComponent(e)}`;
         setMsg(e);
         setBack(u);
@@ -47,7 +64,7 @@ function NativeAuth() {
       const { data } = await supabase.auth.getSession();
       if (!data.session || q) {
         // fresh start: always ask Google so the right account is chosen
-        if (data.session) await supabase.auth.signOut({ scope: "local" });
+        if (data.session) dropLocalSession();
         const r = await lovable.auth.signInWithOAuth("google", {
           redirect_uri: `${window.location.origin}/auth/native`,
           extraParams: { prompt: "select_account" },
@@ -57,17 +74,24 @@ function NativeAuth() {
       }
       const { data: s } = await supabase.auth.getSession();
       if (!s.session) return fail("Google login poora nahi hua. Dobara try karein.");
+      // Stop this tab from rotating the token the app is about to use.
+      try {
+        await supabase.auth.stopAutoRefresh();
+      } catch {
+        /* ignore */
+      }
       try {
         const { code } = await createNativeHandoff({
           data: { challenge, refreshToken: s.session.refresh_token },
         });
         sessionStorage.removeItem(CH);
-        await supabase.auth.signOut({ scope: "local" }); // keep app session valid
+        dropLocalSession(); // session now belongs to the app only
         const u = `${APP}?code=${code}`;
         setMsg("Login ho gaya! App khul raha hai…");
         setBack(u);
         window.location.href = u;
-      } catch {
+      } catch (e) {
+        console.error("[auth/native] handoff failed:", e instanceof Error ? e.message : e);
         fail("Internet ya server problem. Dobara try karein.");
       }
     })();
