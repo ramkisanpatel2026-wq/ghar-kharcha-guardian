@@ -36,6 +36,7 @@ function AuthPage() {
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [pendingEmail, setPendingEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -79,8 +80,9 @@ function AuthPage() {
       if (mode === "up") {
         const normalizedEmail = email.trim().toLowerCase();
         if (fullName.trim().length < 2 || fullName.trim().length > 100) {
-          throw new Error("Enter your full name (2–100 characters).");
+          throw new Error(t("auth.invalidName"));
         }
+        if (password !== confirmPassword) throw new Error(t("auth.passwordMismatch"));
         if (isDisposableEmail(normalizedEmail)) {
           throw new Error(t("auth.disposableEmail"));
         }
@@ -142,7 +144,10 @@ function AuthPage() {
     if (!pendingEmail || busy || resendSeconds > 0) return;
     setBusy(true);
     try {
-      const { error } = await supabase.auth.resend({ type: "signup", email: pendingEmail });
+      const { error } = await supabase.auth.signInWithOtp({
+        email: pendingEmail,
+        options: { shouldCreateUser: true },
+      });
       if (error) throw error;
       setResendSeconds(60);
       setOtp("");
@@ -236,7 +241,7 @@ function AuthPage() {
                 pattern="[0-9]{6}"
                 maxLength={6}
                 aria-label={t("auth.otp")}
-                className="w-full rounded-xl border border-input bg-background px-4 py-3 text-center text-lg tracking-[0.35em] outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-xl border border-input bg-background px-4 py-3 text-center text-lg outline-none focus:ring-2 focus:ring-ring"
                 placeholder="••••••"
                 value={otp}
                 onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
@@ -336,6 +341,19 @@ function AuthPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          {mode === "up" && (
+            <input
+              required
+              type="password"
+              minLength={8}
+              maxLength={128}
+              autoComplete="new-password"
+              className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              placeholder={t("auth.confirmPassword")}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          )}
           <button
             type="submit"
             disabled={busy}
