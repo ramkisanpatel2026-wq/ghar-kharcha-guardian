@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { LangToggle } from "@/components/LangToggle";
@@ -36,8 +37,35 @@ function AuthPage() {
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [resendSeconds, setResendSeconds] = useState(0);
   const [busy, setBusy] = useState(false);
+
+  const disposableEmailDomains = new Set([
+    "10minutemail.com", "10minutemail.net", "20minutemail.com", "33mail.com",
+    "dispostable.com", "emailondeck.com", "fakeinbox.com", "getairmail.com",
+    "getnada.com", "guerrillamail.com", "guerrillamail.net", "inboxkitten.com",
+    "maildrop.cc", "mailinator.com", "mailnesia.com", "mintemail.com",
+    "mohmal.com", "mytemp.email", "nada.email", "sharklasers.com",
+    "tempmail.com", "temp-mail.org", "throwawaymail.com", "trashmail.com",
+    "yopmail.com", "yopmail.fr", "disposablemail.com", "fake-email.com",
+  ]);
+
+  const isDisposableEmail = (value: string) => {
+    const domain = value.trim().toLowerCase().split("@").at(-1) ?? "";
+    return [...disposableEmailDomains].some(
+      (blocked) => domain === blocked || domain.endsWith(`.${blocked}`),
+    );
+  };
+
+  useEffect(() => {
+    if (resendSeconds <= 0) return;
+    const timer = window.setTimeout(() => setResendSeconds((seconds) => seconds - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendSeconds]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -47,24 +75,31 @@ function AuthPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (pendingEmail) return;
     setBusy(true);
     try {
       if (mode === "up") {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
+        const normalizedEmail = email.trim().toLowerCase();
+        if (fullName.trim().length < 2 || fullName.trim().length > 100) {
+          throw new Error(t("auth.invalidName"));
+        }
+        if (password !== confirmPassword) throw new Error(t("auth.passwordMismatch"));
+        if (isDisposableEmail(normalizedEmail)) {
+          throw new Error(t("auth.disposableEmail"));
+        }
+        const { error } = await supabase.auth.signInWithOtp({
+          email: normalizedEmail,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
-            data: { full_name: fullName },
+            shouldCreateUser: true,
+            data: { full_name: fullName.trim() },
           },
         });
         if (error) throw error;
-        if (!data.session) {
-          toast.success("Account created — check your email to confirm, then sign in.");
-          setMode("in");
-          return;
-        }
-        toast.success("Account created");
+        setPendingEmail(normalizedEmail);
+        setOtp("");
+        setResendSeconds(60);
+        toast.success(t("auth.otpSent"));
+        return;
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
@@ -79,6 +114,47 @@ function AuthPage() {
       navigate({ to: "/dashboard", replace: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const verifySignupOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pendingEmail || !/^\d{6}$/.test(otp)) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: pendingEmail,
+        token: otp,
+        type: "email",
+      });
+      if (error) throw error;
+      const { error: passwordError } = await supabase.auth.updateUser({ password });
+      if (passwordError) throw passwordError;
+      toast.success(t("auth.verified"));
+      navigate({ to: "/dashboard", replace: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("auth.invalidOtp"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const resendSignupOtp = async () => {
+    if (!pendingEmail || busy || resendSeconds > 0) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: pendingEmail,
+        options: { shouldCreateUser: true },
+      });
+      if (error) throw error;
+      setResendSeconds(60);
+      setOtp("");
+      toast.success(t("auth.otpSent"));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("auth.otpResendFailed"));
     } finally {
       setBusy(false);
     }
@@ -149,10 +225,60 @@ function AuthPage() {
 
       <div className="mx-auto mt-10 max-w-md rounded-3xl border border-border bg-card p-6 shadow-card">
         <h1 className="text-2xl font-semibold">
-          {mode === "in" ? t("auth.signIn") : t("auth.signUp")}
+          {pendingEmail ? t("auth.verifyEmail") : mode === "in" ? t("auth.signIn") : t("auth.signUp")}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">{t("app.tagline")}</p>
 
+        {pendingEmail ? (
+          <>
+            <p className="mt-5 text-sm text-muted-foreground">
+              {t("auth.enterOtp")} <span className="font-medium text-foreground">{pendingEmail}</span>
+            </p>
+            <form onSubmit={verifySignupOtp} className="mt-5 space-y-3">
+              <input
+                required
+                autoComplete="one-time-code"
+                inputMode="numeric"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                aria-label={t("auth.otp")}
+                className="w-full rounded-xl border border-input bg-background px-4 py-3 text-center text-lg outline-none focus:ring-2 focus:ring-ring"
+                placeholder="••••••"
+                value={otp}
+                onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+              />
+              <button
+                type="submit"
+                disabled={busy || otp.length !== 6}
+                className="w-full rounded-xl gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-hero hover:opacity-95 disabled:opacity-60"
+              >
+                {busy ? t("common.saving") : t("auth.verifyOtp")}
+              </button>
+            </form>
+            <div className="mt-4 flex items-center justify-between text-xs">
+              <button
+                type="button"
+                onClick={resendSignupOtp}
+                disabled={busy || resendSeconds > 0}
+                className="font-medium text-primary hover:underline disabled:opacity-60"
+              >
+                {resendSeconds > 0 ? `${t("auth.resendOtp")} (${resendSeconds}s)` : t("auth.resendOtp")}
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setPendingEmail("");
+                  setOtp("");
+                  setResendSeconds(0);
+                }}
+                className="font-medium text-muted-foreground hover:text-foreground disabled:opacity-60"
+              >
+                {t("auth.changeEmail")}
+              </button>
+            </div>
+          </>
+        ) : <>
         <button
           type="button"
           onClick={google}
@@ -189,6 +315,8 @@ function AuthPage() {
         <form onSubmit={submit} className="space-y-3">
           {mode === "up" && (
             <input
+            required={mode === "up"}
+            maxLength={100}
               className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
               placeholder={t("auth.fullName")}
               value={fullName}
@@ -198,6 +326,7 @@ function AuthPage() {
           <input
             required
             type="email"
+            maxLength={255}
             className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
             placeholder={t("auth.email")}
             value={email}
@@ -206,12 +335,26 @@ function AuthPage() {
           <input
             required
             type="password"
-            minLength={6}
+            minLength={mode === "up" ? 8 : 6}
+            maxLength={128}
             className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
             placeholder={t("auth.password")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          {mode === "up" && (
+            <input
+              required
+              type="password"
+              minLength={8}
+              maxLength={128}
+              autoComplete="new-password"
+              className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              placeholder={t("auth.confirmPassword")}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+          )}
           <button
             type="submit"
             disabled={busy}
@@ -246,6 +389,7 @@ function AuthPage() {
             {mode === "in" ? t("auth.signUp") : t("auth.signIn")}
           </button>
         </p>
+        </>}
       </div>
     </div>
   );
