@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+Keep signup validation in a shared browser-safe module and enforce disposable-email domains at auth-user insertion, since client-only checks are bypassable.

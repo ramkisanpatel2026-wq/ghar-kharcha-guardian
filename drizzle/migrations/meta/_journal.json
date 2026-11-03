@@ -15,6 +15,13 @@
       "when": 1791125634679,
       "tag": "0001_native_auth_handoff",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793698663472,
+      "tag": "0002_block_disposable_signup_domains",
+      "breakpoints": true
     }
   ]
 }

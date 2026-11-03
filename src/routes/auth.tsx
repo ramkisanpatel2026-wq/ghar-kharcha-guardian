@@ -2,11 +2,11 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { LangToggle } from "@/components/LangToggle";
 import { isNativeApp } from "@/lib/capacitor-native";
+import { isDisposableEmail, signUpSchema, signupOtpSchema } from "@/lib/signup-validation";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -44,23 +44,6 @@ function AuthPage() {
   const [resendSeconds, setResendSeconds] = useState(0);
   const [busy, setBusy] = useState(false);
 
-  const disposableEmailDomains = new Set([
-    "10minutemail.com", "10minutemail.net", "20minutemail.com", "33mail.com",
-    "dispostable.com", "emailondeck.com", "fakeinbox.com", "getairmail.com",
-    "getnada.com", "guerrillamail.com", "guerrillamail.net", "inboxkitten.com",
-    "maildrop.cc", "mailinator.com", "mailnesia.com", "mintemail.com",
-    "mohmal.com", "mytemp.email", "nada.email", "sharklasers.com",
-    "tempmail.com", "temp-mail.org", "throwawaymail.com", "trashmail.com",
-    "yopmail.com", "yopmail.fr", "disposablemail.com", "fake-email.com",
-  ]);
-
-  const isDisposableEmail = (value: string) => {
-    const domain = value.trim().toLowerCase().split("@").at(-1) ?? "";
-    return [...disposableEmailDomains].some(
-      (blocked) => domain === blocked || domain.endsWith(`.${blocked}`),
-    );
-  };
-
   useEffect(() => {
     if (resendSeconds <= 0) return;
     const timer = window.setTimeout(() => setResendSeconds((seconds) => seconds - 1), 1000);
@@ -79,22 +62,36 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "up") {
-        const normalizedEmail = email.trim().toLowerCase();
-        if (fullName.trim().length < 2 || fullName.trim().length > 100) {
-          throw new Error(t("auth.invalidName"));
+        const parsed = signUpSchema.safeParse({ fullName, email, password, confirmPassword });
+        if (!parsed.success) {
+          const issue = parsed.error.issues[0];
+          const message = issue?.path[0] === "fullName"
+            ? t("auth.invalidName")
+            : issue?.path[0] === "confirmPassword"
+              ? t("auth.passwordMismatch")
+              : issue?.path[0] === "password"
+                ? t("auth.passwordLength")
+                : t("auth.invalidEmail");
+          throw new Error(message);
         }
-        if (password !== confirmPassword) throw new Error(t("auth.passwordMismatch"));
+        const normalizedEmail = parsed.data.email.toLowerCase();
         if (isDisposableEmail(normalizedEmail)) {
           throw new Error(t("auth.disposableEmail"));
         }
-        const { error } = await supabase.auth.signInWithOtp({
+        const { data, error } = await supabase.auth.signUp({
           email: normalizedEmail,
+          password: parsed.data.password,
           options: {
-            shouldCreateUser: true,
-            data: { full_name: fullName.trim() },
+            emailRedirectTo: `${window.location.origin}/auth`,
+            data: { full_name: parsed.data.fullName },
           },
         });
         if (error) throw error;
+        if (data.session) {
+          toast.success(t("auth.verified"));
+          navigate({ to: "/dashboard", replace: true });
+          return;
+        }
         setPendingEmail(normalizedEmail);
         setOtp("");
         setResendSeconds(60);
@@ -121,17 +118,15 @@ function AuthPage() {
 
   const verifySignupOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pendingEmail || !/^\d{6}$/.test(otp)) return;
+    if (!pendingEmail || !signupOtpSchema.safeParse(otp).success) return;
     setBusy(true);
     try {
       const { error } = await supabase.auth.verifyOtp({
         email: pendingEmail,
         token: otp,
-        type: "email",
+        type: "signup",
       });
       if (error) throw error;
-      const { error: passwordError } = await supabase.auth.updateUser({ password });
-      if (passwordError) throw passwordError;
       toast.success(t("auth.verified"));
       navigate({ to: "/dashboard", replace: true });
     } catch (err) {
@@ -145,10 +140,7 @@ function AuthPage() {
     if (!pendingEmail || busy || resendSeconds > 0) return;
     setBusy(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: pendingEmail,
-        options: { shouldCreateUser: true },
-      });
+      const { error } = await supabase.auth.resend({ type: "signup", email: pendingEmail });
       if (error) throw error;
       setResendSeconds(60);
       setOtp("");
@@ -239,17 +231,17 @@ function AuthPage() {
                 required
                 autoComplete="one-time-code"
                 inputMode="numeric"
-                pattern="[0-9]{6}"
-                maxLength={6}
+              pattern="[0-9]{6,8}"
+              maxLength={8}
                 aria-label={t("auth.otp")}
                 className="w-full rounded-xl border border-input bg-background px-4 py-3 text-center text-lg outline-none focus:ring-2 focus:ring-ring"
                 placeholder="••••••"
                 value={otp}
-                onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 8))}
               />
               <button
                 type="submit"
-                disabled={busy || otp.length !== 6}
+                disabled={busy || !signupOtpSchema.safeParse(otp).success}
                 className="w-full rounded-xl gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-hero hover:opacity-95 disabled:opacity-60"
               >
                 {busy ? t("common.saving") : t("auth.verifyOtp")}
