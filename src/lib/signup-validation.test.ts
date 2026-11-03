@@ -12,9 +12,11 @@ describe("signup validation", () => {
     expect(isDisposableEmail("user@outlook.com")).toBe(false);
   });
 
-  it("requires a six-digit verification code", () => {
+  it("accepts the configured 6–8 digit verification code range", () => {
     expect(signupOtpSchema.safeParse("123456").success).toBe(true);
+    expect(signupOtpSchema.safeParse("12345678").success).toBe(true);
     expect(signupOtpSchema.safeParse("12345").success).toBe(false);
+    expect(signupOtpSchema.safeParse("123456789").success).toBe(false);
     expect(signupOtpSchema.safeParse("12a456").success).toBe(false);
   });
 

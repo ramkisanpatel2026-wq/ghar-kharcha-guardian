@@ -40,7 +40,7 @@ export const signUpSchema = z.object({
   path: ["confirmPassword"],
 });
 
-export const signupOtpSchema = z.string().regex(/^\d{6}$/);
+export const signupOtpSchema = z.string().regex(/^\d{6,8}$/);
 
 export function isDisposableEmail(value: string) {
   const domain = value.trim().toLowerCase().split("@").at(-1) ?? "";

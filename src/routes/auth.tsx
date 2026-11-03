@@ -231,17 +231,17 @@ function AuthPage() {
                 required
                 autoComplete="one-time-code"
                 inputMode="numeric"
-                pattern="[0-9]{6}"
-                maxLength={6}
+              pattern="[0-9]{6,8}"
+              maxLength={8}
                 aria-label={t("auth.otp")}
                 className="w-full rounded-xl border border-input bg-background px-4 py-3 text-center text-lg outline-none focus:ring-2 focus:ring-ring"
                 placeholder="••••••"
                 value={otp}
-                onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 8))}
               />
               <button
                 type="submit"
-                disabled={busy || otp.length !== 6}
+                disabled={busy || !signupOtpSchema.safeParse(otp).success}
                 className="w-full rounded-xl gradient-primary py-3 text-sm font-semibold text-primary-foreground shadow-hero hover:opacity-95 disabled:opacity-60"
               >
                 {busy ? t("common.saving") : t("auth.verifyOtp")}
