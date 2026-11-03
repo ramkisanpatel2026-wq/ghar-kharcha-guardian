@@ -78,14 +78,20 @@ function AuthPage() {
         if (isDisposableEmail(normalizedEmail)) {
           throw new Error(t("auth.disposableEmail"));
         }
-        const { error } = await supabase.auth.signInWithOtp({
+        const { data, error } = await supabase.auth.signUp({
           email: normalizedEmail,
+          password: parsed.data.password,
           options: {
-            shouldCreateUser: true,
-            data: { full_name: fullName.trim() },
+            emailRedirectTo: `${window.location.origin}/auth`,
+            data: { full_name: parsed.data.fullName },
           },
         });
         if (error) throw error;
+        if (data.session) {
+          toast.success(t("auth.verified"));
+          navigate({ to: "/dashboard", replace: true });
+          return;
+        }
         setPendingEmail(normalizedEmail);
         setOtp("");
         setResendSeconds(60);
@@ -118,11 +124,9 @@ function AuthPage() {
       const { error } = await supabase.auth.verifyOtp({
         email: pendingEmail,
         token: otp,
-        type: "email",
+        type: "signup",
       });
       if (error) throw error;
-      const { error: passwordError } = await supabase.auth.updateUser({ password });
-      if (passwordError) throw passwordError;
       toast.success(t("auth.verified"));
       navigate({ to: "/dashboard", replace: true });
     } catch (err) {
@@ -136,10 +140,7 @@ function AuthPage() {
     if (!pendingEmail || busy || resendSeconds > 0) return;
     setBusy(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: pendingEmail,
-        options: { shouldCreateUser: true },
-      });
+      const { error } = await supabase.auth.resend({ type: "signup", email: pendingEmail });
       if (error) throw error;
       setResendSeconds(60);
       setOtp("");
