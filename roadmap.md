@@ -3,4 +3,4 @@
 - [ ] Phase 2: confirm APK v1.0.3 build + share link (build starts after code sync)
 - [x] Phase 3: email signup OTP flow, disposable-email block, password rules
 - [ ] Phase 4: error screen, error_logs table, version on Settings
-- [ ] Configure/verify the auth confirmation email to deliver a 6-digit signup code; default provider template behavior is not exposed in app code.
+- [ ] Set the Confirm signup email template to include `{{ .Token }}` so it sends a numeric code; this hosted template cannot be changed by app code here.
