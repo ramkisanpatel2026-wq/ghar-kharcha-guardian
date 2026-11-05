@@ -52,8 +52,6 @@ const en = {
     passwordMismatch: "Passwords do not match.",
     passwordLength: "Password must be 8–128 characters.",
     invalidEmail: "Enter a valid email address.",
-    passwordLength: "Password must be 8–128 characters.",
-    invalidEmail: "Enter a valid email address.",
     verifyEmail: "Verify your email",
     enterOtp: "Enter the 6–8 digit code sent to",
     otp: "6–8 digit verification code",
