@@ -82,7 +82,7 @@ function AuthPage() {
           email: normalizedEmail,
           password: parsed.data.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
+            emailRedirectTo: window.location.origin,
             data: { full_name: parsed.data.fullName },
           },
         });
@@ -231,8 +231,8 @@ function AuthPage() {
                 required
                 autoComplete="one-time-code"
                 inputMode="numeric"
-              pattern="[0-9]{6,8}"
-              maxLength={8}
+                pattern="[0-9]{6,8}"
+                maxLength={8}
                 aria-label={t("auth.otp")}
                 className="w-full rounded-xl border border-input bg-background px-4 py-3 text-center text-lg outline-none focus:ring-2 focus:ring-ring"
                 placeholder="••••••"
