@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { isDisposableEmail, signUpSchema, signupOtpSchema } from "./signup-validation";
+import { isDisposableEmail, signUpSchema, signupOtpSchema } from "../src/lib/signup-validation";
 
 describe("signup validation", () => {
   it("blocks disposable domains and their subdomains", () => {
