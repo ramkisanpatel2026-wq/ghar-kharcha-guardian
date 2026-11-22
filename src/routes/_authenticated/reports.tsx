@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Download, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtINR, fmtPdfINR, monthRange } from "@/lib/format";
+import { calculateAvailableBalance } from "@/lib/finance";
 import { openExternalUrl } from "@/lib/capacitor-native";
 
 export const Route = createFileRoute("/_authenticated/reports")({
@@ -80,8 +81,7 @@ function Reports() {
       const totalExp = rows.reduce((s, r) => s + r.amount, 0);
       const totalInc = (inc.data ?? []).reduce((s, r) => s + Number(r.amount), 0);
       const totalSav = (sav.data ?? []).reduce((s, r) => s + Number(r.amount), 0);
-      // Same formula as the dashboard: Balance = Income - Expenses - Savings.
-      const balance = Math.round((totalInc - totalExp - totalSav) * 100) / 100;
+      const balance = calculateAvailableBalance(totalInc, totalExp);
       const byCat = new Map<string, number>();
       rows.forEach((r) => byCat.set(r.category, (byCat.get(r.category) ?? 0) + r.amount));
       return {

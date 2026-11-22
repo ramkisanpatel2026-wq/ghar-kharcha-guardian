@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtINR } from "@/lib/format";
+import { calculateAvailableBalance } from "@/lib/finance";
 import {
   normalizeSalaryAmount,
   parseSalaryAmount,
@@ -145,7 +146,7 @@ function Dashboard() {
         income,
         expense,
         savedThisMonth,
-        balance: income - expense - savedThisMonth,
+        balance: calculateAvailableBalance(income, expense),
         pie,
         give,
         receive,
@@ -217,12 +218,6 @@ function Dashboard() {
     return [
       { name: t("dashboard.income"), value: d.income, fill: "oklch(0.60 0.16 155)" },
       { name: t("dashboard.expense"), value: d.expense, fill: "oklch(0.60 0.20 30)" },
-      { name: t("dashboard.savings"), value: d.savedThisMonth, fill: "oklch(0.65 0.15 250)" },
-      {
-        name: t("dashboard.balance"),
-        value: Math.max(0, d.balance),
-        fill: "oklch(0.70 0.15 90)",
-      },
     ];
   }, [d, t]);
 
@@ -266,7 +261,7 @@ function Dashboard() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
+        <div className="min-w-0 rounded-2xl border border-border bg-card p-5 shadow-card">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">{t("dashboard.byCategory")}</h2>
             <Link to="/reports" className="text-xs text-primary hover:underline">
@@ -276,8 +271,8 @@ function Dashboard() {
           {!d || d.pie.length === 0 ? (
             <p className="mt-6 text-sm text-muted-foreground">{t("dashboard.noExpenses")}</p>
           ) : (
-            <div className="mt-2 h-56">
-              <ResponsiveContainer>
+            <div className="mt-2 h-56 min-w-0 w-full">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <PieChart>
                   <Pie
                     data={d.pie}
@@ -314,10 +309,10 @@ function Dashboard() {
           )}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
+        <div className="min-w-0 rounded-2xl border border-border bg-card p-5 shadow-card">
           <h2 className="font-semibold">Monthly overview</h2>
-          <div className="mt-2 h-56">
-            <ResponsiveContainer>
+          <div className="mt-2 h-56 min-w-0 w-full">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart data={barData}>
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} width={50} />
