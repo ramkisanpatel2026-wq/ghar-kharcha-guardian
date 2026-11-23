@@ -12,3 +12,5 @@
 Keep signup validation in a shared browser-safe module and enforce disposable-email domains at auth-user insertion, since client-only checks are bypassable.
 
 Keep shared financial calculations in pure tested helpers so dashboards, reports, and AI summaries cannot drift on core money formulas.
+
+Keep receipt analysis authenticated, request-scoped, and based on owner-only storage so financial documents never become public links.
