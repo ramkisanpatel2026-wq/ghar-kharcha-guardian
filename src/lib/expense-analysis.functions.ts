@@ -37,6 +37,19 @@ function bytesToBase64(bytes: Uint8Array) {
   return btoa(binary);
 }
 
+function matchesFileSignature(bytes: Uint8Array, mimeType: string) {
+  if (mimeType === "image/jpeg") return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (mimeType === "image/png") {
+    return bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+  }
+  if (mimeType === "image/webp") {
+    return String.fromCharCode(...bytes.subarray(0, 4)) === "RIFF" &&
+      String.fromCharCode(...bytes.subarray(8, 12)) === "WEBP";
+  }
+  if (mimeType === "application/pdf") return String.fromCharCode(...bytes.subarray(0, 4)) === "%PDF";
+  return false;
+}
+
 function normalizedDate(value: string | null) {
   if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const parsed = new Date(`${value}T00:00:00.000Z`);
@@ -101,21 +114,33 @@ export const analyzeExpenseInput = createServerFn({ method: "POST" })
         throw new Error("The private receipt could not be opened. Please upload it again.");
       }
 
+      const fileResponse = await fetch(signedFile.signedUrl);
+      if (!fileResponse.ok) throw new Error("The private receipt could not be opened. Please upload it again.");
+      const declaredSize = Number(fileResponse.headers.get("content-length") ?? 0);
+      if (declaredSize > MAX_RECEIPT_BYTES) {
+        throw new Error("The receipt is too large to scan. Upload a file under 8 MB.");
+      }
+      const fileBytes = new Uint8Array(await fileResponse.arrayBuffer());
+      if (fileBytes.byteLength > MAX_RECEIPT_BYTES) {
+        throw new Error("The receipt is too large to scan. Upload a file under 8 MB.");
+      }
+      if (!matchesFileSignature(fileBytes, data.mimeType)) {
+        throw new Error("This file does not match a supported receipt format.");
+      }
+      const fileBase64 = bytesToBase64(fileBytes);
+
       if (data.mimeType === "application/pdf") {
-        const fileResponse = await fetch(signedFile.signedUrl);
-        if (!fileResponse.ok) throw new Error("The PDF receipt could not be opened. Please upload it again.");
-        const fileBytes = new Uint8Array(await fileResponse.arrayBuffer());
-        if (fileBytes.byteLength > MAX_RECEIPT_BYTES) {
-          throw new Error("The receipt is too large to scan. Upload a file under 8 MB.");
-        }
         userMessage.content.push({
           type: "file",
           filename: data.fileName,
-          data: bytesToBase64(fileBytes),
+          data: fileBase64,
           mediaType: "application/pdf",
         });
       } else {
-        userMessage.content.push({ type: "image", image: new URL(signedFile.signedUrl) });
+        userMessage.content.push({
+          type: "image",
+          image: new URL(`data:${data.mimeType};base64,${fileBase64}`),
+        });
       }
     }
 

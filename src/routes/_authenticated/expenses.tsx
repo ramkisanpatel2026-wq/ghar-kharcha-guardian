@@ -2,16 +2,25 @@ import { currentUserId } from "@/lib/auth";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { Plus, Trash2, Search, Mic, Loader2, Square } from "lucide-react";
+import { Plus, Trash2, Search, Mic, Loader2, Square, Sparkles, Camera, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtINR } from "@/lib/format";
 import { format } from "date-fns";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { blobToBase64 } from "@/lib/wav-encoder";
 import { transcribeAndParseExpense } from "@/lib/voice-expense.functions";
+import { analyzeExpenseInput } from "@/lib/expense-analysis.functions";
+import { Button } from "@/components/ui/button";
+
+const RECEIPT_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"] as const;
+type ReceiptMimeType = (typeof RECEIPT_MIME_TYPES)[number];
+
+function isReceiptMimeType(value: string): value is ReceiptMimeType {
+  return RECEIPT_MIME_TYPES.some((mimeType) => mimeType === value);
+}
 
 export const Route = createFileRoute("/_authenticated/expenses")({
   head: () => ({ meta: [{ title: "Expenses — Ghar Kharcha" }] }),
@@ -181,11 +190,116 @@ function ExpenseForm({
   const [note, setNote] = useState("");
   const [payee, setPayee] = useState("");
   const [busy, setBusy] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [naturalText, setNaturalText] = useState("");
+  const [receiptPath, setReceiptPath] = useState<string | null>(null);
+  const [receiptName, setReceiptName] = useState<string | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const [analysisConfidence, setAnalysisConfidence] = useState<string | null>(null);
+  const [possibleDuplicate, setPossibleDuplicate] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const rec = useVoiceRecorder();
   const parseFn = useServerFn(transcribeAndParseExpense);
+  const analyzeFn = useServerFn(analyzeExpenseInput);
   const [parsing, setParsing] = useState(false);
   const [voiceHint, setVoiceHint] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (receiptPreview) URL.revokeObjectURL(receiptPreview);
+    };
+  }, [receiptPreview]);
+
+  const applySuggestion = (suggestion: {
+    amount: number | null;
+    categoryId: string | null;
+    expenseDate: string | null;
+    merchant: string | null;
+    note: string | null;
+    confidence: "high" | "medium" | "low";
+    possibleDuplicate: boolean;
+  }) => {
+    if (suggestion.amount !== null) setAmount(String(suggestion.amount));
+    if (suggestion.categoryId) setCategoryId(suggestion.categoryId);
+    if (suggestion.expenseDate) setDate(suggestion.expenseDate);
+    if (suggestion.merchant) setPayee(suggestion.merchant);
+    if (suggestion.note) setNote(suggestion.note);
+    setAnalysisConfidence(suggestion.confidence);
+    setPossibleDuplicate(suggestion.possibleDuplicate);
+  };
+
+  const analyzeNaturalText = async () => {
+    const text = naturalText.trim();
+    if (!text) return;
+    setAiBusy(true);
+    setVoiceHint(null);
+    setPossibleDuplicate(false);
+    try {
+      const suggestion = await analyzeFn({ data: { source: "text", text } });
+      applySuggestion(suggestion);
+      setVoiceHint(`“${text}”`);
+      toast.success(t("expenses.reviewSuggestion"));
+      if (suggestion.possibleDuplicate) toast.warning(t("expenses.possibleDuplicate"));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("expenses.analysisFailed"));
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
+  const scanReceipt = async (file: File) => {
+    if (!isReceiptMimeType(file.type)) {
+      toast.error(t("expenses.unsupportedReceipt"));
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error(t("expenses.receiptTooLarge"));
+      return;
+    }
+
+    setAiBusy(true);
+    setVoiceHint(null);
+    setPossibleDuplicate(false);
+    try {
+      const userId = await currentUserId();
+      const extension = file.type === "application/pdf"
+        ? "pdf"
+        : file.type === "image/jpeg"
+          ? "jpg"
+          : file.type === "image/png"
+            ? "png"
+            : "webp";
+      const objectPath = `${userId}/${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage.from("bills").upload(objectPath, file, {
+        cacheControl: "3600",
+        contentType: file.type,
+        upsert: false,
+      });
+      if (uploadError) throw new Error(t("expenses.receiptUploadFailed"));
+
+      const previousReceipt = receiptPath;
+      setReceiptPath(objectPath);
+      setReceiptName(file.name);
+      setReceiptPreview(file.type.startsWith("image/") ? URL.createObjectURL(file) : null);
+      if (previousReceipt) {
+        const { error } = await supabase.storage.from("bills").remove([previousReceipt]);
+        if (error) toast.warning(t("expenses.receiptCleanupFailed"));
+      }
+
+      const suggestion = await analyzeFn({
+        data: { source: "receipt", objectPath, mimeType: file.type, fileName: file.name },
+      });
+      applySuggestion(suggestion);
+      setVoiceHint(t("expenses.receiptRead"));
+      toast.success(t("expenses.reviewSuggestion"));
+      if (suggestion.possibleDuplicate) toast.warning(t("expenses.possibleDuplicate"));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t("expenses.analysisFailed"));
+    } finally {
+      setAiBusy(false);
+    }
+  };
 
   const handleMic = async () => {
     if (rec.state === "recording") {
@@ -202,9 +316,10 @@ function ExpenseForm({
         if (parsed.amount != null) setAmount(String(parsed.amount));
         if (parsed.note) setNote(parsed.note);
         if (parsed.payee) setPayee(parsed.payee);
-        if (parsed.category) {
+        const parsedCategory = parsed.category?.toLowerCase();
+        if (parsedCategory) {
           const match = categories.find(
-            (c) => c.name.toLowerCase() === parsed.category!.toLowerCase(),
+            (c) => c.name.toLowerCase() === parsedCategory,
           );
           if (match) setCategoryId(match.id);
         }
@@ -233,6 +348,7 @@ function ExpenseForm({
         note: note || null,
         payee: payee || null,
         category_id: categoryId || null,
+        bill_photo_url: receiptPath,
       });
       if (error) throw error;
       toast.success(t("common.success"));
@@ -256,14 +372,14 @@ function ExpenseForm({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 p-0 sm:items-center sm:p-4">
       <form
         onSubmit={save}
-        className="w-full max-w-md rounded-t-3xl bg-card p-5 shadow-hero sm:rounded-3xl"
+        className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-card p-5 shadow-hero sm:rounded-3xl"
       >
         <h2 className="text-lg font-semibold">{t("expenses.add")}</h2>
 
         <button
           type="button"
           onClick={handleMic}
-          disabled={parsing}
+          disabled={parsing || aiBusy || busy}
           className={`mt-4 flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition ${
             rec.state === "recording"
               ? "border-destructive bg-destructive/10 text-destructive"
@@ -288,6 +404,75 @@ function ExpenseForm({
         </button>
 
         <div className="mt-4 space-y-3">
+          <div className="space-y-2">
+            <label className="text-sm font-medium" htmlFor="expense-natural-language">
+              {t("expenses.describeExpense")}
+            </label>
+            <textarea
+              id="expense-natural-language"
+              value={naturalText}
+              onChange={(event) => setNaturalText(event.target.value)}
+              placeholder={t("expenses.naturalPlaceholder")}
+              rows={2}
+              maxLength={1000}
+              className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              disabled={aiBusy || busy}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => void analyzeNaturalText()}
+              disabled={aiBusy || busy || !naturalText.trim()}
+            >
+              {aiBusy ? <Loader2 className="animate-spin" /> : <Sparkles />}
+              {t("expenses.fillFromText")}
+            </Button>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,application/pdf"
+            capture="environment"
+            className="hidden"
+            disabled={aiBusy || busy}
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              event.currentTarget.value = "";
+              if (file) void scanReceipt(file);
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={aiBusy || busy}
+          >
+            {aiBusy ? <Loader2 className="animate-spin" /> : <Camera />}
+            {receiptName ? t("expenses.changeReceipt") : t("expenses.scanReceipt")}
+          </Button>
+
+          {receiptName && (
+            <div className="flex items-center gap-3 rounded-md border border-border p-2">
+              {receiptPreview ? (
+                <img src={receiptPreview} alt="" className="h-12 w-12 rounded object-cover" />
+              ) : (
+                <FileText className="h-8 w-8 shrink-0 text-muted-foreground" />
+              )}
+              <span className="min-w-0 truncate text-sm">{receiptName}</span>
+            </div>
+          )}
+
+          {voiceHint && <p className="text-xs text-muted-foreground">{voiceHint}</p>}
+          {analysisConfidence === "low" && (
+            <p className="text-xs text-destructive">{t("expenses.lowConfidence")}</p>
+          )}
+          {possibleDuplicate && (
+            <p className="text-xs text-destructive">{t("expenses.possibleDuplicate")}</p>
+          )}
+
           <input
             required
             type="number"
@@ -330,19 +515,29 @@ function ExpenseForm({
           />
         </div>
         <div className="mt-5 flex gap-2">
-          <button
+          <Button
             type="button"
-            onClick={onClose}
-            className="flex-1 rounded-xl border border-input bg-background py-3 text-sm font-medium"
+            variant="outline"
+            className="flex-1"
+            disabled={busy || aiBusy}
+            onClick={() => {
+              void (async () => {
+                if (receiptPath) {
+                  const { error } = await supabase.storage.from("bills").remove([receiptPath]);
+                  if (error) toast.error(t("expenses.receiptCleanupFailed"));
+                }
+                onClose();
+              })();
+            }}
           >
             {t("common.cancel")}
-          </button>
-          <button
-            disabled={busy}
-            className="flex-1 rounded-xl gradient-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+          </Button>
+          <Button
+            disabled={busy || aiBusy}
+            className="flex-1"
           >
             {busy ? t("common.saving") : t("expenses.save")}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
